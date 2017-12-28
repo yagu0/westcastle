@@ -49,7 +49,7 @@ new Vue({
 			props: ['players'],
 			data: function() {
 				return {
-					sortMethod: "score",
+					sortMethod: "pdt",
 				};
 			},
 			template: `
@@ -58,23 +58,23 @@ new Vue({
 						<tr class="title">
 							<th>Rang</th>
 							<th>Joueur</th>
-							<th @click="sortMethod='score'" class="scoring" :class="{active: sortMethod=='score'}">Score</th>
-							<th @click="sortMethod='pdt'" class="scoring" :class="{active: sortMethod=='pdt'}">PdT</th>
+							<th @click="sortMethod='pdt'" class="scoring" :class="{active: sortMethod=='pdt'}">Points</th>
+							<th @click="sortMethod='session'" class="scoring" :class="{active: sortMethod=='session'}">Mini-pts</th>
 						</tr>
 						<tr v-for="p in sortedPlayers" v-if="p.nom!=''">
 							<td>{{ p.rank }}</td>
 							<td>{{ p.prenom }} {{ p.nom }}</td>
-							<td>{{ p.score }}</td>
 							<td>{{ p.pdt }}</td>
+							<td>{{ p.session }}</td>
 						</tr>
 					</table>
 				</div>
 			`,
 			computed: { //TODO: first sort on score, then on Pdt (and reciprocally) --> function add fraction relative Pdt / score (compute min max first, take care of 0 case)
 				sortedPlayers: function() {
-					let sortFunc = this.sortMethod == "score"
-						? this.sortByScore
-						: this.sortByPdt;
+					let sortFunc = this.sortMethod == "pdt"
+						? this.sortByPdt
+						: this.sortBySession;
 					let res = this.players
 						.map( p => { return Object.assign({}, p); }) //to not alter original array
 						.sort(sortFunc);
@@ -91,11 +91,11 @@ new Vue({
 				},
 			},
 			methods: {
-				sortByScore: function(a,b) {
-					return b.score - a.score;
-				},
 				sortByPdt: function(a,b) {
 					return b.pdt - a.pdt;
+				},
+				sortBySession: function(a,b) {
+					return b.session - a.session;
 				},
 			},
 		},
@@ -105,8 +105,8 @@ new Vue({
 				return {
 					unpaired: [],
 					tables: [], //array of arrays of players indices
-					scores: [], //scores for each table (3 or 4 players)
-					pdts: [], //"points de table" for each table (3 or 4 players)
+					pdts: [], //"points de table" for each table
+					sessions: [], //"mini-points" for each table
 					currentIndex: -1, //table index for scoring
 				};
 			},
@@ -114,13 +114,13 @@ new Vue({
 				<div id="pairings">
 					<div v-show="currentIndex < 0">
 						<button class="block btn" @click="shuffle()">Appariement</button>
-						<div class="pairing" v-for="(table,index) in tables" :class="{scored: scores[index].length > 0}"
+						<div class="pairing" v-for="(table,index) in tables" :class="{scored: pdts[index].length > 0}"
 								@click="showScoreForm(table,index)">
 							<p>Table {{ index+1 }}</p>
 							<table>
 								<tr v-for="(i,j) in table">
 									<td :class="{toto: players[i].prenom=='Toto'}">{{ players[i].prenom }} {{ players[i].nom }}</td>
-									<td class="score"><span v-show="pdts[index].length > 0">{{ pdts[index][j] }}</span></td>
+									<td class="score"><span v-show="sessions[index].length > 0">{{ sessions[index][j] }}</span></td>
 								</tr>
 							</table>
 						</div>
@@ -137,7 +137,7 @@ new Vue({
 								<td :class="{toto: players[tables[currentIndex][i]].prenom=='Toto'}">
 									{{ players[tables[currentIndex][i]].prenom }} {{ players[tables[currentIndex][i]].nom }}
 								</td>
-								<td><input type="text" v-model="pdts[currentIndex][i]" value="0"/></td>
+								<td><input type="text" v-model="sessions[currentIndex][i]" value="0"/></td>
 							</tr>
 						</table>
 						<div class="button-container">
@@ -191,35 +191,35 @@ new Vue({
 							t.push(0); //index of "Toto", ghost player
 					});
 					this.tables = tables;
-					this.scores = tables.map( t => { return []; }); //empty scores
 					this.pdts = tables.map( t => { return []; }); //empty pdts
+					this.sessions = tables.map( t => { return []; }); //empty sessions
 				},
 				shuffle: function() {
 					this.doPairings();
 				},
 				showScoreForm: function(table,index) {
-					if (this.scores[index].length > 0)
+					if (this.pdts[index].length > 0)
 						return; //already scored
-					this.scores[index] = _.times(table.length, _.constant(0));
 					this.pdts[index] = _.times(table.length, _.constant(0));
+					this.sessions[index] = _.times(table.length, _.constant(0));
 					this.currentIndex = index;
 				},
 				setScore: function() {
-					let sortedPdts = this.pdts[this.currentIndex]
+					let sortedSessions = this.sessions[this.currentIndex]
 						.map( (s,i) => { return {value:s, index:i}; })
 						.sort( (a,b) => { return parseInt(b.value) - parseInt(a.value); });
-					let scores = [4, 2, 1, 0]; //TODO: ex-aequos ?!
+					let pdts = [4, 2, 1, 0]; //TODO: ex-aequos ?!
 					for (let i=0; i<this.tables[this.currentIndex].length; i++)
 					{
-						this.players[this.tables[this.currentIndex][sortedPdts[i].index]].score += scores[i];
-						this.players[this.tables[this.currentIndex][i]].pdt += parseInt(this.pdts[this.currentIndex][i]);
+						this.players[this.tables[this.currentIndex][sortedSessions[i].index]].pdt += pdts[i];
+						this.players[this.tables[this.currentIndex][i]].session += parseInt(this.sessions[this.currentIndex][i]);
 					}
 					this.currentIndex = -1;
 					this.writeScoreToDb();
 				},
 				resetScore: function() {
-					this.scores[this.currentIndex] = [];
 					this.pdts[this.currentIndex] = [];
+					this.sessions[this.currentIndex] = [];
 					this.currentIndex = -1;
 				},
 				writeScoreToDb: function()
@@ -230,7 +230,7 @@ new Vue({
 					let orderedPlayers = this.players
 						.slice(1) //discard "Toto"
 						.map( p => { return Object.assign({}, p); }) //deep (enough) copy
-						.sort( (a,b) => { return b.score - a.score; });
+						.sort( (a,b) => { return b.pdt - a.pdt; }); //TODO: re-use sorting function in ranking component
 					xhr.send("players="+encodeURIComponent(JSON.stringify(orderedPlayers)));
 				},
 			},
@@ -244,15 +244,15 @@ new Vue({
 			{
 				let players = JSON.parse(xhr.responseText);
 				players.forEach( p => {
-					p.score = !!p.score ? parseInt(p.score) : 0;
 					p.pdt = !!p.pdt ? parseInt(p.pdt) : 0;
+					p.session = !!p.session ? parseInt(p.session) : 0;
 					p.available = !!p.available ? p.available : 1; //use integer for fputcsv PHP func
 				});
 				players.unshift({ //add ghost 4th player for 3-players tables
 					prenom: "Toto",
 					nom: "",
-					score: 0,
 					pdt: 0,
+					session: 0,
 					available: 0,
 				});
 				self.players = players;
