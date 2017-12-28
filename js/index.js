@@ -83,7 +83,7 @@ new Vue({
 								<td :class="{toto: players[tables[currentIndex][i]].prenom=='Toto'}">
 									{{ players[tables[currentIndex][i]].prenom }} {{ players[tables[currentIndex][i]].nom }}
 								</td>
-								<td><input type="text" v-model="sessions[currentIndex][i]" value="0"/></td>
+								<td><input type="text" v-model="sessions[currentIndex][i]"/></td>
 							</tr>
 						</table>
 						<div class="button-container-horizontal">
@@ -93,7 +93,7 @@ new Vue({
 						<div v-if="scored[currentIndex]" class="warning">
 							Attention: un score a déjà été enregistré.
 							Les points indiqués ici s'ajouteront : il faut d'abord
-							<span class="link" @click="document.getElementById('restoreBtn').click()">restaurer l'état précédent.</span>
+							<span class="link" @click="clickRestore()">restaurer l'état précédent.</span>
 							Si c'est déjà fait, ignorer ce message :)
 						</div>
 					</div>
@@ -180,6 +180,9 @@ new Vue({
 					this.currentIndex = -1;
 					this.writeScoreToDb();
 				},
+				clickRestore: function() {
+					document.getElementById('restoreBtn').click();
+				},
 			},
 		},
 		'my-timer': {
@@ -190,7 +193,7 @@ new Vue({
 				};
 			},
 			template: `
-				<div id="timer" :style="{lineHeight: screen.height+ 'px', fontSize: 0.66*screen.height + 'px'}">
+				<div id="timer" :style="{lineHeight: textHeight + 'px', fontSize: 0.66*textHeight + 'px'}">
 					<div @click.left="pauseResume()" @click.right.prevent="reset()" :class="{timeout:time==0}">
 						{{ formattedTime }}
 					</div>
@@ -202,6 +205,9 @@ new Vue({
 					let seconds = this.time % 60;
 					let minutes = Math.floor(this.time / 60);
 					return this.padToZero(minutes) + ":" + this.padToZero(seconds);
+				},
+				textHeight: function() {
+					return screen.height;
 				},
 			},
 			methods: {
@@ -282,7 +288,6 @@ new Vue({
 				rankPeople: function() {
 					return this.players
 						.slice(1) //discard Toto
-						.map( p => { return Object.assign({}, p); }) //to not alter original array
 						.sort(this.sortByScore);
 				},
 				resetPlayers: function() {
@@ -294,7 +299,7 @@ new Vue({
 							p.available = 1;
 						});
 					this.writeScoreToDb();
-					document.getElementById("runPairing").click(); //TODO: hack...
+					document.getElementById("runPairing").click();
 				},
 				restoreLast: function() {
 					let xhr = new XMLHttpRequest();
@@ -312,7 +317,13 @@ new Vue({
 									session: 0,
 									available: 0,
 								});
-								self.players = players;
+								// NOTE: Vue warning "do not mutate property" if direct self.players = players
+								for (let i=1; i<players.length; i++)
+								{
+									players[i].pdt = parseFloat(players[i].pdt);
+									players[i].session = parseInt(players[i].session);
+									Vue.set(self.players, i, players[i]);
+								}
 							}
 						}
 					};
@@ -358,7 +369,6 @@ new Vue({
 			xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 			let orderedPlayers = this.players
 				.slice(1) //discard Toto
-				.map( p => { return Object.assign({}, p); }) //deep (enough) copy
 				.sort(this.sortByScore);
 			xhr.send("players="+encodeURIComponent(JSON.stringify(orderedPlayers)));
 		},
