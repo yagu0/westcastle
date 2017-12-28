@@ -148,14 +148,6 @@ table.ranking tr:not(.title):hover, table.ranking tr:not(.title):nth-child(even)
 	background-color: lightyellow;
 }
 
-table.ranking th.scoring {
-	cursor: pointer;
-}
-
-.active {
-	background-color: yellow;
-}
-
 /* pairings div */
 
 button.block {

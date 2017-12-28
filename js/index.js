@@ -46,22 +46,17 @@ new Vue({
 			},
 		},
 		'my-ranking': {
-			props: ['players'],
-			data: function() {
-				return {
-					sortMethod: "pdt",
-				};
-			},
+			props: ['players','sortByScore','rankPeople'],
 			template: `
 				<div id="ranking">
 					<table class="ranking">
 						<tr class="title">
 							<th>Rang</th>
 							<th>Joueur</th>
-							<th @click="sortMethod='pdt'" class="scoring" :class="{active: sortMethod=='pdt'}">Points</th>
-							<th @click="sortMethod='session'" class="scoring" :class="{active: sortMethod=='session'}">Mini-pts</th>
+							<th>Points</th>
+							<th>Mini-pts</th>
 						</tr>
-						<tr v-for="p in sortedPlayers" v-if="p.nom!=''">
+						<tr v-for="p in sortedPlayers">
 							<td>{{ p.rank }}</td>
 							<td>{{ p.prenom }} {{ p.nom }}</td>
 							<td>{{ p.pdt }}</td>
@@ -70,19 +65,14 @@ new Vue({
 					</table>
 				</div>
 			`,
-			computed: { //TODO: first sort on score, then on Pdt (and reciprocally) --> function add fraction relative Pdt / score (compute min max first, take care of 0 case)
+			computed: {
 				sortedPlayers: function() {
-					let sortFunc = this.sortMethod == "pdt"
-						? this.sortByPdt
-						: this.sortBySession;
-					let res = this.players
-						.map( p => { return Object.assign({}, p); }) //to not alter original array
-						.sort(sortFunc);
+					let res = this.rankPeople();
 					// Add rank information (taking care of ex-aequos)
 					let rank = 1;
 					for (let i=0; i<res.length; i++)
 					{
-						if (i==0 || sortFunc(res[i],res[i-1]) == 0)
+						if (i==0 || this.sortByScore(res[i],res[i-1]) == 0)
 							res[i].rank = rank;
 						else //strictly lower scoring
 							res[i].rank = ++rank;
@@ -90,17 +80,9 @@ new Vue({
 					return res;
 				},
 			},
-			methods: {
-				sortByPdt: function(a,b) {
-					return b.pdt - a.pdt;
-				},
-				sortBySession: function(a,b) {
-					return b.session - a.session;
-				},
-			},
 		},
 		'my-pairings': {
-			props: ['players'],
+			props: ['players','sortByScore'],
 			data: function() {
 				return {
 					unpaired: [],
@@ -152,7 +134,7 @@ new Vue({
 					// Simple case first: 4 by 4
 					let tables = [];
 					let currentTable = [];
-					let ordering = _.shuffle(_.range(this.players.length)); //TODO: take scores into account?
+					let ordering = _.shuffle(_.range(this.players.length));
 					for (let i=0; i<ordering.length; i++)
 					{
 						if ( ! this.players[ordering[i]].available )
@@ -228,9 +210,9 @@ new Vue({
 					xhr.open("POST", "scripts/rw_players.php");
 					xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 					let orderedPlayers = this.players
-						.slice(1) //discard "Toto"
+						.slice(1) //discard Toto
 						.map( p => { return Object.assign({}, p); }) //deep (enough) copy
-						.sort( (a,b) => { return b.pdt - a.pdt; }); //TODO: re-use sorting function in ranking component
+						.sort(this.sortByScore);
 					xhr.send("players="+encodeURIComponent(JSON.stringify(orderedPlayers)));
 				},
 			},
@@ -260,5 +242,16 @@ new Vue({
 		};
 		xhr.open("GET", "scripts/rw_players.php", true);
 		xhr.send(null);
+	},
+	methods: {
+		rankPeople: function() {
+			return this.players
+				.slice(1) //discard Toto
+				.map( p => { return Object.assign({}, p); }) //to not alter original array
+				.sort(this.sortByScore);
+		},
+		sortByScore: function(a,b) {
+			return b.pdt - a.pdt + (Math.atan(b.session - a.session) / (Math.PI/2)) / 2;
+		},
 	},
 });

@@ -12,8 +12,8 @@ if (!isset($_POST["players"]))
 		$players[$row] = array(
 			"prenom" => $data[0],
 			"nom" => $data[1],
-			"score" => count($data)>=3 ? $data[2] : 0,
-			"pdt" => count($data)>=4 ? $data[3] : 0,
+			"pdt" => count($data)>=3 ? $data[2] : 0,
+			"session" => count($data)>=4 ? $data[3] : 0,
 			"available" => count($data)>=5 ? $data[4] : 1,
 		);
 		$row++;
@@ -25,7 +25,7 @@ else
 {
 	// Write header + all players
 	$handle = fopen("../joueurs.csv", "w");
-	fputcsv($handle, ["prenom","nom","score","pdt","present"]);
+	fputcsv($handle, ["prenom","nom","pdt","session","present"]);
 	$players = json_decode($_POST["players"]);
 	foreach ($players as $p)
 		fputcsv($handle, (array)$p);
