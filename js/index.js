@@ -45,88 +45,6 @@ new Vue({
 				},
 			},
 		},
-		'my-ranking': {
-			props: ['players','sortByScore','writeScoreToDb'],
-			template: `
-				<div id="ranking">
-					<table class="ranking">
-						<tr class="title">
-							<th>Rang</th>
-							<th>Joueur</th>
-							<th>Points</th>
-							<th>Mini-pts</th>
-						</tr>
-						<tr v-for="p in sortedPlayers">
-							<td>{{ p.rank }}</td>
-							<td>{{ p.prenom }} {{ p.nom }}</td>
-							<td>{{ p.pdt }}</td>
-							<td>{{ p.session }}</td>
-						</tr>
-					</table>
-					<div class="button-container-vertical" style="width:200px">
-						<button class="btn cancel" @click="resetPlayers()">Réinitialiser</button>
-						<button id="restoreBtn" class="btn" @click="restoreLast()">Restaurer</button>
-					</div>
-				</div>
-			`,
-			computed: {
-				sortedPlayers: function() {
-					let res = this.rankPeople();
-					// Add rank information (taking care of ex-aequos)
-					let rank = 1;
-					for (let i=0; i<res.length; i++)
-					{
-						if (i==0 || this.sortByScore(res[i],res[i-1]) == 0)
-							res[i].rank = rank;
-						else //strictly lower scoring
-							res[i].rank = ++rank;
-					}
-					return res;
-				},
-			},
-			methods: {
-				rankPeople: function() {
-					return this.players
-						.slice(1) //discard Toto
-						.map( p => { return Object.assign({}, p); }) //to not alter original array
-						.sort(this.sortByScore);
-				},
-				resetPlayers: function() {
-					this.players
-						.slice(1) //discard Toto
-						.forEach( p => {
-							p.pdt = 0;
-							p.session = 0;
-							p.available = 1;
-						});
-					this.writeScoreToDb();
-					document.getElementById("runPairing").click(); //TODO: hack...
-				},
-				restoreLast: function() {
-					let xhr = new XMLHttpRequest();
-					let self = this;
-					xhr.onreadystatechange = function() {
-						if (this.readyState == 4 && this.status == 200)
-						{
-							let players = JSON.parse(xhr.responseText);
-							if (players.length > 0)
-							{
-								players.unshift({ //add ghost 4th player for 3-players tables
-									prenom: "Toto",
-									nom: "",
-									pdt: 0,
-									session: 0,
-									available: 0,
-								});
-								self.players = players;
-							}
-						}
-					};
-					xhr.open("GET", "scripts/rw_players.php?restore=1", true);
-					xhr.send(null);
-				},
-			},
-		},
 		'my-pairings': {
 			props: ['players','writeScoreToDb'],
 			data: function() {
@@ -272,7 +190,7 @@ new Vue({
 				};
 			},
 			template: `
-				<div id="timer">
+				<div id="timer" :style="{lineHeight: screen.height+ 'px', fontSize: 0.66*screen.height + 'px'}">
 					<div @click.left="pauseResume()" @click.right.prevent="reset()" :class="{timeout:time==0}">
 						{{ formattedTime }}
 					</div>
@@ -299,7 +217,7 @@ new Vue({
 				},
 				reset: function(e) {
 					this.running = false;
-					this.time = 10; //1:30
+					this.time = 5400; //1:30
 				},
 				start: function() {
 					if (!this.running)
@@ -319,6 +237,88 @@ new Vue({
 			},
 			created: function() {
 				this.reset();
+			},
+		},
+		'my-ranking': {
+			props: ['players','sortByScore','writeScoreToDb'],
+			template: `
+				<div id="ranking">
+					<table class="ranking">
+						<tr class="title">
+							<th>Rang</th>
+							<th>Joueur</th>
+							<th>Points</th>
+							<th>Mini-pts</th>
+						</tr>
+						<tr v-for="p in sortedPlayers">
+							<td>{{ p.rank }}</td>
+							<td>{{ p.prenom }} {{ p.nom }}</td>
+							<td>{{ p.pdt }}</td>
+							<td>{{ p.session }}</td>
+						</tr>
+					</table>
+					<div class="button-container-vertical" style="width:200px">
+						<button class="btn cancel" @click="resetPlayers()">Réinitialiser</button>
+						<button id="restoreBtn" class="btn" @click="restoreLast()">Restaurer</button>
+					</div>
+				</div>
+			`,
+			computed: {
+				sortedPlayers: function() {
+					let res = this.rankPeople();
+					// Add rank information (taking care of ex-aequos)
+					let rank = 1;
+					for (let i=0; i<res.length; i++)
+					{
+						if (i==0 || this.sortByScore(res[i],res[i-1]) == 0)
+							res[i].rank = rank;
+						else //strictly lower scoring
+							res[i].rank = ++rank;
+					}
+					return res;
+				},
+			},
+			methods: {
+				rankPeople: function() {
+					return this.players
+						.slice(1) //discard Toto
+						.map( p => { return Object.assign({}, p); }) //to not alter original array
+						.sort(this.sortByScore);
+				},
+				resetPlayers: function() {
+					this.players
+						.slice(1) //discard Toto
+						.forEach( p => {
+							p.pdt = 0;
+							p.session = 0;
+							p.available = 1;
+						});
+					this.writeScoreToDb();
+					document.getElementById("runPairing").click(); //TODO: hack...
+				},
+				restoreLast: function() {
+					let xhr = new XMLHttpRequest();
+					let self = this;
+					xhr.onreadystatechange = function() {
+						if (this.readyState == 4 && this.status == 200)
+						{
+							let players = JSON.parse(xhr.responseText);
+							if (players.length > 0)
+							{
+								players.unshift({ //add ghost 4th player for 3-players tables
+									prenom: "Toto",
+									nom: "",
+									pdt: 0,
+									session: 0,
+									available: 0,
+								});
+								self.players = players;
+							}
+						}
+					};
+					xhr.open("GET", "scripts/rw_players.php?restore=1", true);
+					xhr.send(null);
+				},
 			},
 		},
 	},

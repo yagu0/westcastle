@@ -12,18 +12,18 @@
 		<div id="mahjong">
 			<header>
 				<ul class="sidenav">
-					<li @click="display='players'">Joueurs</li>
-					<li @click="display='ranking'">Classement</li>
+					<li @click="display='players'">Participants</li>
 					<li @click="display='pairings'">Appariements</li>
 					<li @click="display='timer'">Chronomètre</li>
+					<li @click="display='ranking'">Classement</li>
 				</ul>
 				<img class="logo" src="img/logo_Westcastle.png"/>
 			</header>
 			<main>
 				<my-players v-show="display=='players'" :players="players"></my-players>
-				<my-ranking v-show="display=='ranking'" :players="players" :sort-by-score="sortByScore" :write-score-to-db="writeScoreToDb"></my-ranking>
 				<my-pairings v-show="display=='pairings'" :players="players" :write-score-to-db="writeScoreToDb"></my-pairings>
 				<my-timer v-show="display=='timer'" @clockover="display='pairings'"></my-timer>
+				<my-ranking v-show="display=='ranking'" :players="players" :sort-by-score="sortByScore" :write-score-to-db="writeScoreToDb"></my-ranking>
 			</main>
 		</div>
 	</body>

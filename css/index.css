@@ -283,11 +283,11 @@ td.score {
 	top: 0;
 	min-height: 100%;
 	width: 100%;
-	font-size: 500px;
 	background-color: white;
 	cursor: pointer;
 	line-height: 100%;
-	font-family: monospace;
+	text-align: center;
+	vertical-align: middle;
 }
 
 .timeout {
