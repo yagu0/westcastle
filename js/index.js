@@ -9,7 +9,7 @@ new Vue({
 			props: ['players'],
 			template: `
 				<div id="players">
-					<div id="active">
+					<div class="left">
 						<p>Présents</p>
 						<table class="list">
 							<tr v-for="p in sortedPlayers" v-if="p.available" @click="toggleAvailability(p.index)">
@@ -18,7 +18,7 @@ new Vue({
 							</tr>
 						</table>
 					</div>
-					<div id="inactive">
+					<div id="inactive" class="right">
 						<p>Absents</p>
 						<table class="list">
 							<tr v-for="p in sortedPlayers" v-if="!p.available && p.nom!=''" @click="toggleAvailability(p.index)">
@@ -46,7 +46,7 @@ new Vue({
 			},
 		},
 		'my-ranking': {
-			props: ['players','sortByScore','rankPeople'],
+			props: ['players','sortByScore','writeScoreToDb'],
 			template: `
 				<div id="ranking">
 					<table class="ranking">
@@ -63,6 +63,10 @@ new Vue({
 							<td>{{ p.session }}</td>
 						</tr>
 					</table>
+					<div class="button-container-vertical" style="width:200px">
+						<button class="btn cancel" @click="resetPlayers()">Réinitialiser</button>
+						<button id="restoreBtn" class="btn" @click="restoreLast()">Restaurer</button>
+					</div>
 				</div>
 			`,
 			computed: {
@@ -80,23 +84,65 @@ new Vue({
 					return res;
 				},
 			},
+			methods: {
+				rankPeople: function() {
+					return this.players
+						.slice(1) //discard Toto
+						.map( p => { return Object.assign({}, p); }) //to not alter original array
+						.sort(this.sortByScore);
+				},
+				resetPlayers: function() {
+					this.players
+						.slice(1) //discard Toto
+						.forEach( p => {
+							p.pdt = 0;
+							p.session = 0;
+							p.available = 1;
+						});
+					this.writeScoreToDb();
+					document.getElementById("runPairing").click(); //TODO: hack...
+				},
+				restoreLast: function() {
+					let xhr = new XMLHttpRequest();
+					let self = this;
+					xhr.onreadystatechange = function() {
+						if (this.readyState == 4 && this.status == 200)
+						{
+							let players = JSON.parse(xhr.responseText);
+							if (players.length > 0)
+							{
+								players.unshift({ //add ghost 4th player for 3-players tables
+									prenom: "Toto",
+									nom: "",
+									pdt: 0,
+									session: 0,
+									available: 0,
+								});
+								self.players = players;
+							}
+						}
+					};
+					xhr.open("GET", "scripts/rw_players.php?restore=1", true);
+					xhr.send(null);
+				},
+			},
 		},
 		'my-pairings': {
-			props: ['players','sortByScore'],
+			props: ['players','writeScoreToDb'],
 			data: function() {
 				return {
 					unpaired: [],
 					tables: [], //array of arrays of players indices
-					pdts: [], //"points de table" for each table
 					sessions: [], //"mini-points" for each table
 					currentIndex: -1, //table index for scoring
+					scored: [], //boolean for each table index
 				};
 			},
 			template: `
 				<div id="pairings">
 					<div v-show="currentIndex < 0">
-						<button class="block btn" @click="shuffle()">Appariement</button>
-						<div class="pairing" v-for="(table,index) in tables" :class="{scored: pdts[index].length > 0}"
+						<button id="runPairing" class="block btn" @click="doPairings()">Nouvelle ronde</button>
+						<div class="pairing" v-for="(table,index) in tables" :class="{scored: scored[index]}"
 								@click="showScoreForm(table,index)">
 							<p>Table {{ index+1 }}</p>
 							<table>
@@ -122,9 +168,15 @@ new Vue({
 								<td><input type="text" v-model="sessions[currentIndex][i]" value="0"/></td>
 							</tr>
 						</table>
-						<div class="button-container">
-							<button class="btn" @click="setScore()">Enregistrer</button>
-							<button class="btn cancel" @click="resetScore()">Annuler</button>
+						<div class="button-container-horizontal">
+							<button class="btn validate" @click="setScore()">Enregistrer</button>
+							<button class="btn" @click="currentIndex = -1">Fermer</button>
+						</div>
+						<div v-if="scored[currentIndex]" class="warning">
+							Attention: un score a déjà été enregistré.
+							Les points indiqués ici s'ajouteront : il faut d'abord
+							<span class="link" @click="document.getElementById('restoreBtn').click()">restaurer l'état précédent.</span>
+							Si c'est déjà fait, ignorer ce message :)
 						</div>
 					</div>
 				</div>
@@ -173,47 +225,42 @@ new Vue({
 							t.push(0); //index of "Toto", ghost player
 					});
 					this.tables = tables;
-					this.pdts = tables.map( t => { return []; }); //empty pdts
 					this.sessions = tables.map( t => { return []; }); //empty sessions
-				},
-				shuffle: function() {
-					this.doPairings();
+					this.scored = tables.map( t => { return false; }); //nothing scored yet
+					this.currentIndex = -1; //required if reset while scoring
 				},
 				showScoreForm: function(table,index) {
-					if (this.pdts[index].length > 0)
-						return; //already scored
-					this.pdts[index] = _.times(table.length, _.constant(0));
-					this.sessions[index] = _.times(table.length, _.constant(0));
+					if (this.sessions[index].length == 0)
+						this.sessions[index] = _.times(table.length, _.constant(0));
 					this.currentIndex = index;
 				},
 				setScore: function() {
 					let sortedSessions = this.sessions[this.currentIndex]
 						.map( (s,i) => { return {value:s, index:i}; })
 						.sort( (a,b) => { return parseInt(b.value) - parseInt(a.value); });
-					let pdts = [4, 2, 1, 0]; //TODO: ex-aequos ?!
-					for (let i=0; i<this.tables[this.currentIndex].length; i++)
+					let pdts = [4, 2, 1, 0];
+					// NOTE: take care of ex-aequos (spread points subtotal)
+					let curSum = 0, curCount = 0, start = 0;
+					for (let i=0; i<4; i++)
 					{
-						this.players[this.tables[this.currentIndex][sortedSessions[i].index]].pdt += pdts[i];
+						// Update pdts:
+						curSum += pdts[i];
+						curCount++;
+						if (i==3 || sortedSessions[i].value > sortedSessions[i+1].value)
+						{
+							let pdt = curSum / curCount;
+							for (let j=start; j<=i; j++)
+								this.players[this.tables[this.currentIndex][sortedSessions[j].index]].pdt += pdt;
+							curSum = 0;
+							curCount = 0;
+							start = i+1;
+						}
+						// Update sessions:
 						this.players[this.tables[this.currentIndex][i]].session += parseInt(this.sessions[this.currentIndex][i]);
 					}
+					this.scored[this.currentIndex] = true;
 					this.currentIndex = -1;
 					this.writeScoreToDb();
-				},
-				resetScore: function() {
-					this.pdts[this.currentIndex] = [];
-					this.sessions[this.currentIndex] = [];
-					this.currentIndex = -1;
-				},
-				writeScoreToDb: function()
-				{
-					let xhr = new XMLHttpRequest();
-					xhr.open("POST", "scripts/rw_players.php");
-					xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-					let orderedPlayers = this.players
-						.slice(1) //discard Toto
-						.map( p => { return Object.assign({}, p); }) //deep (enough) copy
-						.sort(this.sortByScore);
-					xhr.send("players="+encodeURIComponent(JSON.stringify(orderedPlayers)));
 				},
 			},
 		},
@@ -226,7 +273,7 @@ new Vue({
 			{
 				let players = JSON.parse(xhr.responseText);
 				players.forEach( p => {
-					p.pdt = !!p.pdt ? parseInt(p.pdt) : 0;
+					p.pdt = !!p.pdt ? parseFloat(p.pdt) : 0;
 					p.session = !!p.session ? parseInt(p.session) : 0;
 					p.available = !!p.available ? p.available : 1; //use integer for fputcsv PHP func
 				});
@@ -244,14 +291,19 @@ new Vue({
 		xhr.send(null);
 	},
 	methods: {
-		rankPeople: function() {
-			return this.players
-				.slice(1) //discard Toto
-				.map( p => { return Object.assign({}, p); }) //to not alter original array
-				.sort(this.sortByScore);
-		},
+		// Used both in ranking and pairings:
 		sortByScore: function(a,b) {
 			return b.pdt - a.pdt + (Math.atan(b.session - a.session) / (Math.PI/2)) / 2;
+		},
+		writeScoreToDb: function() {
+			let xhr = new XMLHttpRequest();
+			xhr.open("POST", "scripts/rw_players.php");
+			xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			let orderedPlayers = this.players
+				.slice(1) //discard Toto
+				.map( p => { return Object.assign({}, p); }) //deep (enough) copy
+				.sort(this.sortByScore);
+			xhr.send("players="+encodeURIComponent(JSON.stringify(orderedPlayers)));
 		},
 	},
 });

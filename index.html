@@ -19,8 +19,8 @@
 			</header>
 			<main>
 				<my-players v-show="display=='players'" :players="players"></my-players>
-				<my-ranking v-show="display=='ranking'" :players="players" :sort-by-score="sortByScore" :rank-people="rankPeople"></my-ranking>
-				<my-pairings v-show="display=='pairings'" :players="players" :sort-by-score="sortByScore"></my-pairings>
+				<my-ranking v-show="display=='ranking'" :players="players" :sort-by-score="sortByScore" :write-score-to-db="writeScoreToDb"></my-ranking>
+				<my-pairings v-show="display=='pairings'" :players="players" :write-score-to-db="writeScoreToDb"></my-pairings>
 			</main>
 		</div>
 	</body>

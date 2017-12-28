@@ -65,6 +65,43 @@ table th {
 	font-weight: bold;
 }
 
+.left, .right {
+	float: left;
+	width: 50%;
+}
+
+.button-container-horizontal, .button-container-vertical {
+	margin-top: 30px;
+	text-align: center;
+}
+.button-container-vertical {
+	float: left;
+}
+/* All children except first: margin: 30px */
+.button-container-horizontal .btn:not(:first-child) {
+	margin-right: 30px;
+}
+.button-container-vertical .btn {
+	display: block;
+	margin-left: 30px;
+}
+.button-container-vertical .btn:not(:first-child) {
+	margin-top: 15px;
+}
+
+button.validate {
+	background-image: linear-gradient(to bottom, #6fa162, #40992e);
+}
+button.validate:hover {
+	background-image: linear-gradient(to bottom, #37cc4e, #40c24f);
+}
+button.cancel {
+	background-image: linear-gradient(to bottom, #d93470, #b82b47);
+}
+button.cancel:hover {
+	background-image: linear-gradient(to bottom, #fc433c, #d93434);
+}
+
 /* players div */
 
 #players {
@@ -75,11 +112,6 @@ table th {
 #players p {
 	font-weight: bold;
 	text-align: center;
-}
-
-#active, #inactive {
-	float: left;
-	width: 50%;
 }
 
 #inactive table {
@@ -119,6 +151,7 @@ table.list tr:not(.title):hover, table.ranking tr:not(.title):nth-child(even):ho
 
 #ranking {
 	margin-bottom: 15px;
+	overflow: auto;
 }
 
 table.ranking {
@@ -126,6 +159,8 @@ table.ranking {
 	width: 500px;
 	margin: 0 auto;
 	font-size: 1.1rem;
+	display: block;
+	float: left;
 }
 
 table.ranking td
@@ -150,22 +185,19 @@ table.ranking tr:not(.title):hover, table.ranking tr:not(.title):nth-child(even)
 
 /* pairings div */
 
+.warning {
+	color: red;
+	margin-top: 25px;
+}
+
+span.link {
+	color: darkblue;
+	cursor: pointer;
+}
+
 button.block {
 	display: block;
-	margin: 30px auto;
-}
-
-.button-container {
-	margin-top: 30px;
-	text-align: center;
-}
-
-button.cancel {
-	margin-left: 30px;
-	background-image: linear-gradient(to bottom, #d93470, #b82b47);
-}
-button.cancel:hover {
-	background-image: linear-gradient(to bottom, #fc433c, #d93434);
+	margin: 25px auto;
 }
 
 .toto {
@@ -192,9 +224,6 @@ td.score {
 	cursor: pointer;
 }
 .unpaired {
-	cursor: default;
-}
-.scored {
 	cursor: default;
 }
 

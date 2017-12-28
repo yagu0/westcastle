@@ -2,6 +2,12 @@
 
 if (!isset($_POST["players"]))
 {
+	if (isset($_GET["restore"]) && $_GET["restore"])
+	{
+		// Restore backup
+		if (!rename("../joueurs.csv.bak", "../joueurs.csv"))
+			exit("[]");
+	}
 	// Retrieve all players
 	$handle = fopen("../joueurs.csv", "r");
 	$players = [];
@@ -23,6 +29,7 @@ if (!isset($_POST["players"]))
 }
 else
 {
+	copy("../joueurs.csv", "../joueurs.csv.bak"); //backup current checkpoint
 	// Write header + all players
 	$handle = fopen("../joueurs.csv", "w");
 	fputcsv($handle, ["prenom","nom","pdt","session","present"]);
