@@ -264,6 +264,63 @@ new Vue({
 				},
 			},
 		},
+		'my-timer': {
+			data: function() {
+				return {
+					time: 0, //remaining time, in seconds
+					running: false,
+				};
+			},
+			template: `
+				<div id="timer">
+					<div @click.left="pauseResume()" @click.right.prevent="reset()" :class="{timeout:time==0}">
+						{{ formattedTime }}
+					</div>
+					<img class="close-cross" src="img/cross.svg" @click="$emit('clockover')"/>
+				</div>
+			`,
+			computed: {
+				formattedTime: function() {
+					let seconds = this.time % 60;
+					let minutes = Math.floor(this.time / 60);
+					return this.padToZero(minutes) + ":" + this.padToZero(seconds);
+				},
+			},
+			methods: {
+				padToZero: function(a) {
+					if (a < 10)
+						return "0" + a;
+					return a;
+				},
+				pauseResume: function() {
+					this.running = !this.running;
+					if (this.running)
+						this.start();
+				},
+				reset: function(e) {
+					this.running = false;
+					this.time = 10; //1:30
+				},
+				start: function() {
+					if (!this.running)
+						return;
+					if (this.time == 0)
+					{
+						new Audio("sounds/gong.mp3").play();
+						this.running = false;
+						return;
+					}
+					setTimeout(() => {
+						if (this.running)
+							this.time--;
+						this.start();
+					}, 1000);
+				},
+			},
+			created: function() {
+				this.reset();
+			},
+		},
 	},
 	created: function() {
 		let xhr = new XMLHttpRequest();

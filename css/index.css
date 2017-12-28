@@ -2,11 +2,14 @@
 
 @import '../vendor/Ubuntu_googlefont.css';
 
+html, body {
+	height: 100%;
+}
+
 body {
 	font-family: Ubuntu, Verdana, sans-serif;
-	margin: 0;
-	width: 800px;
 	margin: 0 auto;
+	width: 800px;
 	font-size: 1.1rem;
 }
 
@@ -37,6 +40,18 @@ body {
 
 .sidenav li:hover {
     color: #f1f1f1;
+}
+
+img.logo {
+	width: 200px;
+	position: fixed;
+	display: block;
+	left: 0;
+	overflow-x: hidden;
+	padding: 20px 0 0 0;
+	margin: 0;
+	top: 350px;
+	z-index: 10;
 }
 
 .main {
@@ -257,4 +272,32 @@ td.score {
 
 #scoreInput table th {
 	padding-bottom: 10px;
+}
+
+/* Timer */
+
+#timer {
+	position: absolute;
+	z-index: 100;
+	left: 0;
+	top: 0;
+	min-height: 100%;
+	width: 100%;
+	font-size: 500px;
+	background-color: white;
+	cursor: pointer;
+	line-height: 100%;
+	font-family: monospace;
+}
+
+.timeout {
+	color: red;
+}
+
+img.close-cross {
+	display: block;
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 30px;
 }
