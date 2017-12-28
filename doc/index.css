@@ -1,9 +1,26 @@
 @import '../vendor/Ubuntu_googlefont.css';
 
+.tldr {
+	color: green;
+	font-weight: bold;
+}
+
+hr {
+	margin-bottom: 15px;
+}
+
+p.small-spacing {
+	margin-bottom: 5px;
+}
+
+ul, ol {
+	margin-top: 5px;
+}
+
 body {
 	font-family: Ubuntu, Verdana, sans-serif;
 	font-size: 1.1rem;
-	width: 1200px;
+	width: 800px;
 	margin: 30px auto;
 	line-height: 1.5rem;
 }

@@ -8,6 +8,18 @@ html
 
 	body
 
+		span.tldr TL;DR:
+		ol
+			li Cliquer sur les joueurs absents dans l'onglet "joueurs"
+			li Aller dans la section "appariements" et cliquer sur le bouton en haut
+			li Lancer le chrono (section "chronomètre", puis click gauche [puis F11])
+			li À la fin d'une ronde, cliquer sur chaque table pour indiquer les (mini-)points.
+		p Le classement est mis à jour dans la rubrique correspondante et dans joueurs.csv.
+
+		p Voir aussi la #[a(href="https://auder.net/westcastle_demo.webm") vidéo de démonstration]
+
+		hr
+
 		span L'application est divisée en 4 sections :
 		ul
 			li Participants : la liste des joueurs présents (et absents)
@@ -17,8 +29,6 @@ html
 
 		h2 Participants
 
-		img(src="doc/screen_players.png")
-
 		p.
 			Un clic sur un joueur présent l'enlève des joueurs actifs (il est absent) ;
 			réciproquement, un clic sur un absent le ramène dans la liste des joueurs actifs.
@@ -26,32 +36,24 @@ html
 
 		h2 Appariements
 
-		img(src="doc/screen_pairings_new.png")
-
 		p.
 			Un clic sur le bouton "Nouvelle ronde" réinitialise toutes les tables, en (re-)répartissant les joueurs aléatoirement sur celles-ci.
 			Si nécessaire, un quatrième joueur "Toto" est ajouté en fin de table.
 			Si seulement 1, 2, ou 5 joueurs sont présents, aucune configuration ne permet de faire jouer tout le monde : il y aura des joueurs exempts.
-
-		img(src="doc/screen_pairings_scoring.png")
 
 		p.
 			En fin de ronde, un clic sur une table permet de donner les scores de chaque joueur - en mini-points.
 			Un clic sur "Enregistrer" valide les scores : le classement est automatiquement mis à jour dans la rubrique correspondante,
 			et la table s'affiche désormais sur fond vert. Un clic sur "Fermer" annule l'opération, aucun changement n'est effectué.
 
-		img(src="doc/screen_pairings_restore.png")
-
 		p.
-			En cas d'erreur, ne surtout pas scorer une nouvelle table : d'abord restaurer l'état précédent en cliquant sur le bouton "Restaurer"
+			En cas d'erreur, #[strong ne surtout pas scorer une nouvelle table :] d'abord restaurer l'état précédent en cliquant sur le bouton "Restaurer"
 			sur l'écran de classement ; alternativement, on peut cliquer sur le lien présent dans l'avertissement lorsqu'on reclique sur la table en question.
 			Ensuite, rentrer les scores corrigés.
 
 		h2 Chronomètre
 
-		img(src="doc/screen_timer.png")
-
-		p.
+		p.small-spacing.
 			Ce chronomètre basique est conçu pour s'afficher centré en mode plein écran : il faut donc commencer par appuyer sur F11
 			(la touche peut varier suivant le navigateur...). Ensuite :
 
@@ -64,8 +66,6 @@ html
 			Note : le chronomètre reste actif même si l'on change de vue - penser à le mettre en pause ou le réinitialiser.
 
 		h2 Classement
-
-		img(src="doc/screen_ranking.png")
 
 		p.
 			Les scores sont ordonnés par points de table décroissants d'abord, puis en cas d'ex-aequos par mini-points décroissants.

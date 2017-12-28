@@ -5,41 +5,49 @@
     <title>Westcastle usage</title>
     <link rel="stylesheet" href="doc/index.css">
   </head>
-  <body><span>L'application est divisée en 4 sections :</span>
+  <body><span class="tldr">TL;DR:</span>
+    <ol>
+      <li>Cliquer sur les joueurs absents dans l'onglet "joueurs"</li>
+      <li>Aller dans la section "appariements" et cliquer sur le bouton en haut</li>
+      <li>Lancer le chrono (section "chronomètre", puis click gauche [puis F11])</li>
+      <li>À la fin d'une ronde, cliquer sur chaque table pour indiquer les (mini-)points.</li>
+    </ol>
+    <p>Le classement est mis à jour dans la rubrique correspondante et dans joueurs.csv.</p>
+    <p>Voir aussi la <a href="https://auder.net/westcastle_demo.webm">vidéo de démonstration</a></p>
+    <hr><span>L'application est divisée en 4 sections :</span>
     <ul>
       <li>Participants : la liste des joueurs présents (et absents)</li>
       <li>Appariements : répartition des joueurs présents par tables</li>
       <li>Chronomètre : un chrono qui démarre à 1h30 et sonne une fois à zéro</li>
       <li>Classement : le tableau des scores (voir aussi joueurs.csv)</li>
     </ul>
-    <h2>Participants</h2><img src="doc/screen_players.png">
+    <h2>Participants</h2>
     <p>
       Un clic sur un joueur présent l'enlève des joueurs actifs (il est absent) ;
       réciproquement, un clic sur un absent le ramène dans la liste des joueurs actifs.
       Les appariements sont déterminés pour les joueurs présents seulement - en revanche le classement indique tout le monde.
       
     </p>
-    <h2>Appariements</h2><img src="doc/screen_pairings_new.png">
+    <h2>Appariements</h2>
     <p>
       Un clic sur le bouton "Nouvelle ronde" réinitialise toutes les tables, en (re-)répartissant les joueurs aléatoirement sur celles-ci.
       Si nécessaire, un quatrième joueur "Toto" est ajouté en fin de table.
-      Si seulement 1, 2, ou 5 ou 6 joueurs sont présents, aucune configuration ne permet de faire jouer tout le monde : il y aura des joueurs exempts.
+      Si seulement 1, 2, ou 5 joueurs sont présents, aucune configuration ne permet de faire jouer tout le monde : il y aura des joueurs exempts.
       
-    </p><img src="doc/screen_pairings_scoring.png">
+    </p>
     <p>
       En fin de ronde, un clic sur une table permet de donner les scores de chaque joueur - en mini-points.
       Un clic sur "Enregistrer" valide les scores : le classement est automatiquement mis à jour dans la rubrique correspondante,
       et la table s'affiche désormais sur fond vert. Un clic sur "Fermer" annule l'opération, aucun changement n'est effectué.
       
-    </p><img src="doc/screen_pairings_restore.png">
-    <p>
-      En cas d'erreur, ne surtout pas scorer une nouvelle table : d'abord restaurer l'état précédent en cliquant sur le bouton "Restaurer"
+    </p>
+    <p>En cas d'erreur, <strong>ne surtout pas scorer une nouvelle table :</strong> d'abord restaurer l'état précédent en cliquant sur le bouton "Restaurer"
       sur l'écran de classement ; alternativement, on peut cliquer sur le lien présent dans l'avertissement lorsqu'on reclique sur la table en question.
       Ensuite, rentrer les scores corrigés.
       
     </p>
-    <h2>Chronomètre</h2><img src="doc/screen_timer.png">
-    <p>
+    <h2>Chronomètre</h2>
+    <p class="small-spacing">
       Ce chronomètre basique est conçu pour s'afficher centré en mode plein écran : il faut donc commencer par appuyer sur F11
       (la touche peut varier suivant le navigateur...). Ensuite :
       
@@ -53,7 +61,7 @@
       Note : le chronomètre reste actif même si l'on change de vue - penser à le mettre en pause ou le réinitialiser.
       
     </p>
-    <h2>Classement</h2><img src="doc/screen_ranking.png">
+    <h2>Classement</h2>
     <p>
       Les scores sont ordonnés par points de table décroissants d'abord, puis en cas d'ex-aequos par mini-points décroissants.
       
