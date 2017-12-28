@@ -21,7 +21,7 @@ new Vue({
 					<div id="inactive">
 						<p>Absents</p>
 						<table class="list">
-							<tr v-for="p in sortedPlayers" v-if="!p.available" @click="toggleAvailability(p.index)">
+							<tr v-for="p in sortedPlayers" v-if="!p.available && p.nom!=''" @click="toggleAvailability(p.index)">
 								<td>{{ p.prenom }}</td>
 								<td>{{ p.nom }}</td>
 							</tr>
@@ -61,8 +61,8 @@ new Vue({
 							<th @click="sortMethod='score'" class="scoring" :class="{active: sortMethod=='score'}">Score</th>
 							<th @click="sortMethod='pdt'" class="scoring" :class="{active: sortMethod=='pdt'}">PdT</th>
 						</tr>
-						<tr v-for="(p,i) in sortedPlayers">
-							<td>{{ i+1 }}</td>
+						<tr v-for="p in sortedPlayers" v-if="p.nom!=''">
+							<td>{{ p.rank }}</td>
 							<td>{{ p.prenom }} {{ p.nom }}</td>
 							<td>{{ p.score }}</td>
 							<td>{{ p.pdt }}</td>
@@ -70,14 +70,24 @@ new Vue({
 					</table>
 				</div>
 			`,
-			computed: {
+			computed: { //TODO: first sort on score, then on Pdt (and reciprocally) --> function add fraction relative Pdt / score (compute min max first, take care of 0 case)
 				sortedPlayers: function() {
 					let sortFunc = this.sortMethod == "score"
 						? this.sortByScore
 						: this.sortByPdt;
-					return this.players
-						.map( p => { return p; }) //to not alter original array
+					let res = this.players
+						.map( p => { return Object.assign({}, p); }) //to not alter original array
 						.sort(sortFunc);
+					// Add rank information (taking care of ex-aequos)
+					let rank = 1;
+					for (let i=0; i<res.length; i++)
+					{
+						if (i==0 || sortFunc(res[i],res[i-1]) == 0)
+							res[i].rank = rank;
+						else //strictly lower scoring
+							res[i].rank = ++rank;
+					}
+					return res;
 				},
 			},
 			methods: {
@@ -109,12 +119,8 @@ new Vue({
 							<p>Table {{ index+1 }}</p>
 							<table>
 								<tr v-for="(i,j) in table">
-									<td>{{ players[i].prenom }} {{ players[i].nom }}</td>
+									<td :class="{toto: players[i].prenom=='Toto'}">{{ players[i].prenom }} {{ players[i].nom }}</td>
 									<td class="score"><span v-show="pdts[index].length > 0">{{ pdts[index][j] }}</span></td>
-								</tr>
-								<tr v-if="table.length < 4">
-									<td>&nbsp;</td>
-									<td>&nbsp;</td>
 								</tr>
 							</table>
 						</div>
@@ -128,7 +134,9 @@ new Vue({
 					<div id="scoreInput" v-if="currentIndex >= 0">
 						<table>
 							<tr v-for="(index,i) in tables[currentIndex]">
-								<td>{{ players[tables[currentIndex][i]].prenom }} {{ players[tables[currentIndex][i]].nom }}</td>
+								<td :class="{toto: players[tables[currentIndex][i]].prenom=='Toto'}">
+									{{ players[tables[currentIndex][i]].prenom }} {{ players[tables[currentIndex][i]].nom }}
+								</td>
 								<td><input type="text" v-model="pdts[currentIndex][i]" value="0"/></td>
 							</tr>
 						</table>
@@ -177,6 +185,11 @@ new Vue({
 						else
 							this.unpaired = currentTable;
 					}
+					// Ensure that all tables have 4 players
+					tables.forEach( t => {
+						if (t.length < 4)
+							t.push(0); //index of "Toto", ghost player
+					});
 					this.tables = tables;
 					this.scores = tables.map( t => { return []; }); //empty scores
 					this.pdts = tables.map( t => { return []; }); //empty pdts
@@ -195,7 +208,7 @@ new Vue({
 					let sortedPdts = this.pdts[this.currentIndex]
 						.map( (s,i) => { return {value:s, index:i}; })
 						.sort( (a,b) => { return parseInt(b.value) - parseInt(a.value); });
-					let scores = [4, 2, 1, 0]; //TODO: biased for 3-players tables. TODO: ex-aequos ?!
+					let scores = [4, 2, 1, 0]; //TODO: ex-aequos ?!
 					for (let i=0; i<this.tables[this.currentIndex].length; i++)
 					{
 						this.players[this.tables[this.currentIndex][sortedPdts[i].index]].score += scores[i];
@@ -215,6 +228,7 @@ new Vue({
 					xhr.open("POST", "scripts/rw_players.php");
 					xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 					let orderedPlayers = this.players
+						.slice(1) //discard "Toto"
 						.map( p => { return Object.assign({}, p); }) //deep (enough) copy
 						.sort( (a,b) => { return b.score - a.score; });
 					xhr.send("players="+encodeURIComponent(JSON.stringify(orderedPlayers)));
@@ -233,6 +247,13 @@ new Vue({
 					p.score = !!p.score ? parseInt(p.score) : 0;
 					p.pdt = !!p.pdt ? parseInt(p.pdt) : 0;
 					p.available = !!p.available ? p.available : 1; //use integer for fputcsv PHP func
+				});
+				players.unshift({ //add ghost 4th player for 3-players tables
+					prenom: "Toto",
+					nom: "",
+					score: 0,
+					pdt: 0,
+					available: 0,
 				});
 				self.players = players;
 			}
