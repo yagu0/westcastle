@@ -154,8 +154,8 @@ new Vue({
 				},
 				setScore: function() {
 					let sortedSessions = this.sessions[this.currentIndex]
-						.map( (s,i) => { return {value:s, index:i}; })
-						.sort( (a,b) => { return parseInt(b.value) - parseInt(a.value); });
+						.map( (s,i) => { return {value:parseInt(s), index:i}; })
+						.sort( (a,b) => { return b.value - a.value; });
 					let pdts = [4, 2, 1, 0];
 					// NOTE: take care of ex-aequos (spread points subtotal)
 					let curSum = 0, curCount = 0, start = 0;
