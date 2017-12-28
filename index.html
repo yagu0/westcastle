@@ -1,0 +1,32 @@
+<DOCTYPE !html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>Mahjong pairings</title>
+		<link rel="stylesheet" href="vendor/normalize.css">
+		<link rel="stylesheet" href="css/index.css">
+	</head>
+
+	<body>
+		<div id="mahjong">
+			<header>
+				<ul class="sidenav">
+					<li @click="display='players'">Joueurs</li>
+					<li @click="display='ranking'">Classement</li>
+					<li @click="display='pairings'">Appariements</li>
+				</ul>
+			</header>
+			<main>
+				<my-players v-show="display=='players'" :players="players"></my-players>
+				<my-ranking v-show="display=='ranking'" :players="players"></my-ranking>
+				<my-pairings v-show="display=='pairings'" :players="players"></my-pairings>
+			</main>
+		</div>
+	</body>
+
+	<script src="vendor/underscore-min.js"></script>
+	<script src="vendor/vue.min.js"></script>
+	<script src="js/index.js"></script>
+
+</html>

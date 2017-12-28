@@ -1,0 +1,230 @@
+/* General */
+
+@import '../vendor/Ubuntu_googlefont.css';
+
+body {
+	font-family: Ubuntu, Verdana, sans-serif;
+	margin: 0;
+	width: 800px;
+	margin: 0 auto;
+	font-size: 1.1rem;
+}
+
+.sidenav {
+	height: 100%;
+	width: 200px;
+	position: fixed;
+	z-index: 1;
+	top: 0;
+	left: 0;
+	background-color: #111;
+	overflow-x: hidden;
+	padding: 20px 0 0 0;
+	margin: 0;
+}
+
+@media screen and (max-height: 450px) {
+	.sidenav {padding-top: 15px;}
+}
+
+.sidenav li {
+	padding: 6px 8px 6px 16px;
+	font-size: 25px;
+	color: #818181;
+	display: block;
+	cursor: pointer;
+}
+
+.sidenav li:hover {
+    color: #f1f1f1;
+}
+
+.main {
+	margin-left: 200px; /* Same as the width of the sidenav */
+	padding: 0px 10px;
+}
+
+.btn {
+  background-color: #3498db;
+  background-image: linear-gradient(to bottom, #3498db, #2980b9);
+  box-shadow: 0px 2px 3px #666666;
+  font-family: Arial;
+  color: #ffffff;
+  font-size: 20px;
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background-color: #3cb0fd;
+  background-image: linear-gradient(to bottom, #3cb0fd, #3498db);
+  text-decoration: none;
+}
+
+table th {
+	font-weight: bold;
+}
+
+/* players div */
+
+#players {
+	overflow: auto;
+}
+
+#players p {
+	font-weight: bold;
+	text-align: center;
+}
+
+#active, #inactive {
+	float: left;
+	width: 50%;
+}
+
+#inactive table {
+	opacity: 0.6;
+}
+
+table.list {
+	border-collapse: collapse;
+	width: 400px;
+	margin: 0 auto;
+	table-layout: fixed;
+	font-size: 1.1rem;
+	cursor: pointer;
+}
+
+table.list td
+{
+	border: 1px solid #ddd;
+	padding: 10px;
+}
+table.list th {
+	padding: 1em 10px;
+	text-align: left;
+}
+
+table.list tr:not(.title) {
+	background-color: #aaa;
+}
+table.list tr:not(.title):nth-child(even){
+	background-color: #ccc;
+}
+table.list tr:not(.title):hover, table.ranking tr:not(.title):nth-child(even):hover {
+	background-color: lightyellow;
+}
+
+/* ranking div */
+
+table.ranking {
+	border-collapse: collapse;
+	width: 500px;
+	margin: 0 auto;
+	font-size: 1.1rem;
+}
+
+table.ranking td
+{
+	border: 1px solid #ddd;
+	padding: 10px;
+}
+table.ranking th {
+	padding: 1em 10px;
+	text-align: left;
+}
+
+table.ranking tr:not(.title) {
+	background-color: #aaa;
+}
+table.ranking tr:not(.title):nth-child(even){
+	background-color: #ccc;
+}
+table.ranking tr:not(.title):hover, table.ranking tr:not(.title):nth-child(even):hover {
+	background-color: lightyellow;
+}
+
+table.ranking th.scoring {
+	cursor: pointer;
+}
+
+.active {
+	background-color: yellow;
+}
+
+/* pairings div */
+
+button.block {
+	display: block;
+	margin: 30px auto;
+}
+
+.button-container {
+	margin-top: 30px;
+	text-align: center;
+}
+
+button.cancel {
+	margin-left: 30px;
+	background-image: linear-gradient(to bottom, #d93470, #b82b47);
+}
+button.cancel:hover {
+	background-image: linear-gradient(to bottom, #fc433c, #d93434);
+}
+
+.scored {
+	background-color: lightgreen;
+}
+
+#pairings p {
+	font-weight: bold;
+}
+
+td.score {
+	padding-left: 30px;
+}
+
+.pairing {
+	float: left;
+	width: 47%;
+	padding-left: 3%;
+	padding-bottom: 10px;
+	cursor: pointer;
+}
+.unpaired {
+	cursor: default;
+}
+.scored {
+	cursor: default;
+}
+
+.pairing > table {
+	font-size: 1.1rem;
+}
+
+.pairing:hover:not(.scored) {
+	background-color: yellow;
+}
+
+#scoreInput {
+	margin: 30px 0;
+}
+
+#scoreInput table {
+	width: 500px;
+	margin: 0 auto;
+	table-layout: fixed;
+	font-size: 1.1rem;
+}
+
+#scoreInput table td {overflow:hidden;}
+
+#scoreInput table td:nth-of-type(2) {padding:0 10px;}
+#scoreInput table td:nth-of-type(3) {padding: 0 10px;}
+
+#scoreInput table td > input {
+	padding: 0 3px;
+}
+
+#scoreInput table th {
+	padding-bottom: 10px;
+}
