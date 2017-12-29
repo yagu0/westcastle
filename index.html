@@ -20,16 +20,17 @@
 				<img class="logo" src="img/logo_Westcastle.png"/>
 			</header>
 			<main>
-				<my-players v-show="display=='players'" :players="players"></my-players>
-				<my-pairings v-show="display=='pairings'" :players="players" :write-score-to-db="writeScoreToDb"></my-pairings>
+				<my-players v-show="display=='players'" :players="players" :init-players="initPlayers"></my-players>
+				<my-pairings v-show="display=='pairings'" :players="players" :commit-scores="commitScores"></my-pairings>
 				<my-timer v-show="display=='timer'" @clockover="display='pairings'"></my-timer>
-				<my-ranking v-show="display=='ranking'" :players="players" :sort-by-score="sortByScore" :write-score-to-db="writeScoreToDb"></my-ranking>
+				<my-ranking v-show="display=='ranking'" :players="players" :sort-by-score="sortByScore" :commit-scores="commitScores"></my-ranking>
 			</main>
 		</div>
 	</body>
 
 	<script src="vendor/underscore-min.js"></script>
 	<script src="vendor/vue.min.js"></script>
+	<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.13/vue.js"></script>-->
 	<script src="js/index.js"></script>
 
 </html>

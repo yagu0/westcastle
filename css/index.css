@@ -50,6 +50,15 @@ img.logo {
 	z-index: 10;
 }
 
+.hide {
+	display: none;
+}
+
+.clear {
+	clear: both;
+	overflow: auto;
+}
+
 .main {
 	margin-left: 200px; /* Same as the width of the sidenav */
 	padding: 0px 10px;
@@ -64,12 +73,18 @@ img.logo {
   font-size: 20px;
   padding: 10px 20px 10px 20px;
   text-decoration: none;
+	cursor: pointer;
 }
 
 .btn:hover {
   background-color: #3cb0fd;
   background-image: linear-gradient(to bottom, #3cb0fd, #3498db);
   text-decoration: none;
+}
+
+button.block {
+	display: block;
+	margin: 25px auto;
 }
 
 table th {
@@ -82,7 +97,7 @@ table th {
 }
 
 .button-container-horizontal, .button-container-vertical {
-	margin-top: 30px;
+	margin: 15px 0;
 	text-align: center;
 }
 .button-container-vertical {
@@ -158,42 +173,6 @@ table.list tr:not(.title):hover, table.ranking tr:not(.title):nth-child(even):ho
 	background-color: lightyellow;
 }
 
-/* ranking div */
-
-#ranking {
-	margin-bottom: 15px;
-	overflow: auto;
-}
-
-table.ranking {
-	border-collapse: collapse;
-	width: 500px;
-	margin: 0 auto;
-	font-size: 1.1rem;
-	display: block;
-	float: left;
-}
-
-table.ranking td
-{
-	border: 1px solid #ddd;
-	padding: 10px;
-}
-table.ranking th {
-	padding: 1em 10px;
-	text-align: left;
-}
-
-table.ranking tr:not(.title) {
-	background-color: #aaa;
-}
-table.ranking tr:not(.title):nth-child(even){
-	background-color: #ccc;
-}
-table.ranking tr:not(.title):hover, table.ranking tr:not(.title):nth-child(even):hover {
-	background-color: lightyellow;
-}
-
 /* pairings div */
 
 .warning {
@@ -204,11 +183,6 @@ table.ranking tr:not(.title):hover, table.ranking tr:not(.title):nth-child(even)
 span.link {
 	color: darkblue;
 	cursor: pointer;
-}
-
-button.block {
-	display: block;
-	margin: 25px auto;
 }
 
 .toto {
@@ -292,4 +266,40 @@ img.close-cross {
 	top: 0;
 	right: 0;
 	width: 30px;
+}
+
+/* ranking div */
+
+#ranking {
+	margin-bottom: 15px;
+	overflow: auto;
+}
+
+table.ranking {
+	border-collapse: collapse;
+	width: 500px;
+	margin: 0 auto;
+	font-size: 1.1rem;
+	display: block;
+	float: left;
+}
+
+table.ranking td
+{
+	border: 1px solid #ddd;
+	padding: 10px;
+}
+table.ranking th {
+	padding: 1em 10px;
+	text-align: left;
+}
+
+table.ranking tr:not(.title) {
+	background-color: #aaa;
+}
+table.ranking tr:not(.title):nth-child(even){
+	background-color: #ccc;
+}
+table.ranking tr:not(.title):hover, table.ranking tr:not(.title):nth-child(even):hover {
+	background-color: lightyellow;
 }

@@ -1,10 +1,10 @@
-prenom,nom,pdt,session,present
-William,Plaisance,4,30,1
-Rosamonde,Dupuy,4,25,1
-Fabienne,Aubin,2,15,1
-Grégoire,Léveillé,2,10,0
-Fantina,Quinn,1,0,1
-Amitee,Morneau,1,-5,0
+prenom,nom
+William,Plaisance
+Rosamonde,Dupuy
+Fabienne,Aubin
+Grégoire,Léveillé
+Fantina,Quinn
+Amitee,Morneau
 William,Lespérance
 Dreux,Vadeboncoeur
 Brigliador,Cadieux

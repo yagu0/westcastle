@@ -1,4 +1,3 @@
 *.swp
-/joueurs.csv
-*.bak
+*.csv
 .~lock*

@@ -6,7 +6,7 @@ new Vue({
 	},
 	components: {
 		'my-players': {
-			props: ['players'],
+			props: ['players','initPlayers'],
 			template: `
 				<div id="players">
 					<div class="left">
@@ -27,6 +27,12 @@ new Vue({
 							</tr>
 						</table>
 					</div>
+					<div class="clear">
+						<input class="hide" id="upload" type="file" @change="upload"/>
+						<button class="btn block cancel" @click="uploadTrigger()" title="Charge la liste des joueurs, en principe en début de tournoi">
+							(Ré)initialiser
+						</button>
+					</div>
 				</div>
 			`,
 			computed: {
@@ -41,12 +47,22 @@ new Vue({
 			methods: {
 				toggleAvailability: function(i) {
 					this.players[i].available = 1 - this.players[i].available;
-					this.$forceUpdate(); //TODO (Vue.set... ?!)
+				},
+				uploadTrigger: function() {
+					document.getElementById("upload").click();
+				},
+				upload: function(e) {
+					let file = (e.target.files || e.dataTransfer.files)[0];
+					var reader = new FileReader();
+					reader.onloadend = ev => {
+						this.initPlayers(ev.currentTarget.result);
+					};
+					reader.readAsText(file);
 				},
 			},
 		},
 		'my-pairings': {
-			props: ['players','writeScoreToDb'],
+			props: ['players','commitScores'],
 			data: function() {
 				return {
 					unpaired: [],
@@ -59,7 +75,14 @@ new Vue({
 			template: `
 				<div id="pairings">
 					<div v-show="currentIndex < 0">
-						<button id="runPairing" class="block btn" @click="doPairings()">Nouvelle ronde</button>
+						<div class="button-container-horizontal">
+							<button class="btn validate" :class="{hide: tables.length==0}" @click="commitScores()" title="Valide l'état actuel des scores (cf. rubrique Classement) en mémoire. Cette action est nécessaire au moins une fois en fin de tournoi après toutes les parties, et est recommandée après chaque ronde">
+								Valider
+							</button>
+							<button id="doPairings" class="btn" :class="{cancel: tables.length>0}" @click="doPairings()" title="Répartit les joueurs actifs aléatoirement sur les tables">
+								Nouvelle ronde
+							</button>
+						</div>
 						<div class="pairing" v-for="(table,index) in tables" :class="{scored: scored[index]}"
 								@click="showScoreForm(table,index)">
 							<p>Table {{ index+1 }}</p>
@@ -83,18 +106,17 @@ new Vue({
 								<td :class="{toto: players[tables[currentIndex][i]].prenom=='Toto'}">
 									{{ players[tables[currentIndex][i]].prenom }} {{ players[tables[currentIndex][i]].nom }}
 								</td>
-								<td><input type="text" v-model="sessions[currentIndex][i]"/></td>
+								<td><input type="text" v-model="sessions[currentIndex][i]" :disabled="scored[currentIndex]"/></td>
 							</tr>
 						</table>
 						<div class="button-container-horizontal">
-							<button class="btn validate" @click="setScore()">Enregistrer</button>
-							<button class="btn" @click="currentIndex = -1">Fermer</button>
-						</div>
-						<div v-if="scored[currentIndex]" class="warning">
-							Attention: un score a déjà été enregistré.
-							Les points indiqués ici s'ajouteront : il faut d'abord
-							<span class="link" @click="clickRestore()">restaurer l'état précédent.</span>
-							Si c'est déjà fait, ignorer ce message :)
+							<button :class="{hide:scored[currentIndex]}" class="btn validate" @click="setScore()" title="Enregistre le score dans la base (la rubrique Classement est mise à jour)">
+								Enregistrer
+							</button>
+							<button :class="{hide:!scored[currentIndex]}" class="btn cancel" @click="resetScore()" title="Annule le score précédemment enregistré : l'action est visible dans la rubrique Classement">
+								Annuler
+							</button>
+							<button class="btn" @click="closeScoreForm()">Fermer</button>
 						</div>
 					</div>
 				</div>
@@ -152,36 +174,57 @@ new Vue({
 						this.sessions[index] = _.times(table.length, _.constant(0));
 					this.currentIndex = index;
 				},
-				setScore: function() {
+				closeScoreForm: function() {
+					if (!this.scored[this.currentIndex])
+						this.sessions[this.currentIndex] = [];
+					this.currentIndex = -1;
+				},
+				getPdts: function() {
 					let sortedSessions = this.sessions[this.currentIndex]
 						.map( (s,i) => { return {value:parseInt(s), index:i}; })
 						.sort( (a,b) => { return b.value - a.value; });
-					let pdts = [4, 2, 1, 0];
+					const ref_pdts = [4, 2, 1, 0];
 					// NOTE: take care of ex-aequos (spread points subtotal)
 					let curSum = 0, curCount = 0, start = 0;
+					let sortedPdts = [];
 					for (let i=0; i<4; i++)
 					{
-						// Update pdts:
-						curSum += pdts[i];
+						curSum += ref_pdts[i];
 						curCount++;
 						if (i==3 || sortedSessions[i].value > sortedSessions[i+1].value)
 						{
 							let pdt = curSum / curCount;
 							for (let j=start; j<=i; j++)
-								this.players[this.tables[this.currentIndex][sortedSessions[j].index]].pdt += pdt;
+								sortedPdts.push(pdt);
 							curSum = 0;
 							curCount = 0;
 							start = i+1;
 						}
-						// Update sessions:
+					}
+					// Re-order pdts to match table order
+					let pdts = [0, 0, 0, 0];
+					for (let i=0; i<4; i++)
+						pdts[sortedSessions[i].index] = sortedPdts[i];
+					return pdts;
+				},
+				setScore: function() {
+					let pdts = this.getPdts();
+					for (let i=0; i<4; i++)
+					{
+						this.players[this.tables[this.currentIndex][i]].pdt += pdts[i];
 						this.players[this.tables[this.currentIndex][i]].session += parseInt(this.sessions[this.currentIndex][i]);
 					}
-					this.scored[this.currentIndex] = true;
+					Vue.set(this.scored, this.currentIndex, true);
 					this.currentIndex = -1;
-					this.writeScoreToDb();
 				},
-				clickRestore: function() {
-					document.getElementById('restoreBtn').click();
+				resetScore: function() {
+					let pdts = this.getPdts();
+					for (let i=0; i<4; i++)
+					{
+						this.players[this.tables[this.currentIndex][i]].pdt -= pdts[i];
+						this.players[this.tables[this.currentIndex][i]].session -= parseInt(this.sessions[this.currentIndex][i]);
+					}
+					Vue.set(this.scored, this.currentIndex, false);
 				},
 			},
 		},
@@ -249,7 +292,7 @@ new Vue({
 			},
 		},
 		'my-ranking': {
-			props: ['players','sortByScore','writeScoreToDb'],
+			props: ['players','sortByScore','commitScores'],
 			template: `
 				<div id="ranking">
 					<table class="ranking">
@@ -267,8 +310,11 @@ new Vue({
 						</tr>
 					</table>
 					<div class="button-container-vertical" style="width:200px">
-						<button class="btn cancel" @click="resetPlayers()">Réinitialiser</button>
-						<button id="restoreBtn" class="btn" @click="restoreLast()">Restaurer</button>
+						<a id="download" href="#"></a>
+						<button class="btn" @click="download()" title="Télécharge le classement courant au format CSV">Télécharger</button>
+						<button class="btn cancel" @click="resetPlayers()" title="Réinitialise les scores à zéro. ATTENTION: action irréversible">
+							Réinitialiser
+						</button>
 					</div>
 				</div>
 			`,
@@ -294,86 +340,78 @@ new Vue({
 						.sort(this.sortByScore);
 				},
 				resetPlayers: function() {
+					if (confirm('Êtes-vous sûr ?'))
+					{
+						this.players
+							.slice(1) //discard Toto
+							.forEach( p => {
+								p.pdt = 0;
+								p.session = 0;
+								p.available = 1;
+							});
+						this.commitScores();
+						document.getElementById("doPairings").click();
+					}
+				},
+				download: function() {
+					// Prepare file content
+					let content = "prénom,nom,pdt,session\n";
 					this.players
 						.slice(1) //discard Toto
+						.sort(this.sortByScore)
 						.forEach( p => {
-							p.pdt = 0;
-							p.session = 0;
-							p.available = 1;
+							content += p.prenom + "," + p.nom + "," + p.pdt + "," + p.session + "\n";
 						});
-					this.writeScoreToDb();
-					document.getElementById("runPairing").click();
-				},
-				restoreLast: function() {
-					let xhr = new XMLHttpRequest();
-					let self = this;
-					xhr.onreadystatechange = function() {
-						if (this.readyState == 4 && this.status == 200)
-						{
-							let players = JSON.parse(xhr.responseText);
-							if (players.length > 0)
-							{
-								players.unshift({ //add ghost 4th player for 3-players tables
-									prenom: "Toto",
-									nom: "",
-									pdt: 0,
-									session: 0,
-									available: 0,
-								});
-								// NOTE: Vue warning "do not mutate property" if direct self.players = players
-								for (let i=1; i<players.length; i++)
-								{
-									players[i].pdt = parseFloat(players[i].pdt);
-									players[i].session = parseInt(players[i].session);
-									Vue.set(self.players, i, players[i]);
-								}
-							}
-						}
-					};
-					xhr.open("GET", "scripts/rw_players.php?restore=1", true);
-					xhr.send(null);
+					// Prepare and trigger download link
+					let downloadAnchor = document.getElementById("download");
+					downloadAnchor.setAttribute("download", "classement.csv");
+					downloadAnchor.href = "data:text/plain;charset=utf-8," + encodeURIComponent(content);
+					downloadAnchor.click();
 				},
 			},
 		},
 	},
 	created: function() {
-		let xhr = new XMLHttpRequest();
-		let self = this;
-		xhr.onreadystatechange = function() {
-			if (this.readyState == 4 && this.status == 200)
-			{
-				let players = JSON.parse(xhr.responseText);
-				players.forEach( p => {
-					p.pdt = !!p.pdt ? parseFloat(p.pdt) : 0;
-					p.session = !!p.session ? parseInt(p.session) : 0;
-					p.available = !!p.available ? p.available : 1; //use integer for fputcsv PHP func
-				});
-				players.unshift({ //add ghost 4th player for 3-players tables
-					prenom: "Toto",
-					nom: "",
-					pdt: 0,
-					session: 0,
-					available: 0,
-				});
-				self.players = players;
-			}
-		};
-		xhr.open("GET", "scripts/rw_players.php", true);
-		xhr.send(null);
+		let players = JSON.parse(localStorage.getItem("players"));
+		if (players !== null)
+		{
+			this.addToto(players);
+			this.players = players;
+		}
 	},
 	methods: {
+		addToto: function(array) {
+			array.unshift({ //add ghost 4th player for 3-players tables
+				prenom: "Toto",
+				nom: "",
+				pdt: 0,
+				session: 0,
+				available: 0,
+			});
+		},
 		// Used both in ranking and pairings:
 		sortByScore: function(a,b) {
 			return b.pdt - a.pdt + (Math.atan(b.session - a.session) / (Math.PI/2)) / 2;
 		},
-		writeScoreToDb: function() {
-			let xhr = new XMLHttpRequest();
-			xhr.open("POST", "scripts/rw_players.php");
-			xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-			let orderedPlayers = this.players
-				.slice(1) //discard Toto
-				.sort(this.sortByScore);
-			xhr.send("players="+encodeURIComponent(JSON.stringify(orderedPlayers)));
+		commitScores: function() {
+			localStorage.setItem(
+				"players",
+				JSON.stringify(this.players.slice(1)) //discard Toto
+			);
+		},
+		// Used in players, reinit players array
+		initPlayers: function(csv) {
+			const allLines = csv
+				.split(/\r\n|\n|\r/) //line breaks
+				.splice(1); //discard header
+			let players = allLines
+				.filter( line => { return line.length > 0; }) //remove empty lines
+				.map( line => {
+					let parts = line.split(",");
+					return {prenom: parts[0], nom: parts[1], pdt: 0, session:0, available: 1};
+				});
+			this.addToto(players);
+			this.players = players;
 		},
 	},
 });

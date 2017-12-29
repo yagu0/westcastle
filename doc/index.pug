@@ -10,11 +10,11 @@ html
 
 		span.tldr TL;DR:
 		ol
-			li Cliquer sur les joueurs absents dans l'onglet "joueurs"
-			li Aller dans la section "appariements" et cliquer sur le bouton en haut
-			li Lancer le chrono (section "chronomètre", puis click gauche [puis F11])
-			li À la fin d'une ronde, cliquer sur chaque table pour indiquer les (mini-)points.
-		p Le classement est mis à jour dans la rubrique correspondante et dans joueurs.csv.
+			li Cliquer sur les joueurs absents dans l'onglet "Participants"
+			li Aller dans la section "appariements" et cliquer sur le bouton "Nouvelle ronde"
+			li Lancer le chrono (section "Chronomètre", puis click gauche [puis F11])
+			li Après la ronde, cliquer sur chaque table pour indiquer les (mini-)points, #[strong puis cliquer sur "Valider".]
+		p Le classement est mis à jour dans la rubrique correspondante.
 
 		p Voir aussi la #[a(href="https://auder.net/westcastle_demo.webm") vidéo de démonstration]
 
@@ -25,7 +25,7 @@ html
 			li Participants : la liste des joueurs présents (et absents)
 			li Appariements : répartition des joueurs présents par tables
 			li Chronomètre : un chrono qui démarre à 1h30 et sonne une fois à zéro
-			li Classement : le tableau des scores (voir aussi joueurs.csv)
+			li Classement : le tableau des scores
 
 		h2 Participants
 
@@ -47,9 +47,7 @@ html
 			et la table s'affiche désormais sur fond vert. Un clic sur "Fermer" annule l'opération, aucun changement n'est effectué.
 
 		p.
-			En cas d'erreur, #[strong ne surtout pas scorer une nouvelle table :] d'abord restaurer l'état précédent en cliquant sur le bouton "Restaurer"
-			sur l'écran de classement ; alternativement, on peut cliquer sur le lien présent dans l'avertissement lorsqu'on reclique sur la table en question.
-			Ensuite, rentrer les scores corrigés.
+			En cas d'erreur, re-cliquer sur la table à corriger : cliquer ensuite sur "Annuler", puis ré-entrer les scores.
 
 		h2 Chronomètre
 
@@ -69,7 +67,9 @@ html
 
 		p.
 			Les scores sont ordonnés par points de table décroissants d'abord, puis en cas d'ex-aequos par mini-points décroissants.
+			Ils peuvent être téléchargés via le bouton en haut à droite. Dans le fichier, "pdt" indique les points de table cumulés
+			et "session" les points de session cumulés (aussi appelés mini-points).
 
-		p.
-			Un clic sur "Réinitialiser" remet tous les compteurs à zéro : par exemple pour démarrer un nouveau cycle de tournois.
-			Cette action peut être annulée (immédiatement après) en cliquant sur "Restaurer".
+		p
+			| Un clic sur "Réinitialiser" remet tous les compteurs à zéro : par exemple pour démarrer un nouveau cycle de tournois.
+			strong Attention cette action est irréversible.
