@@ -270,20 +270,16 @@ td.score {
 	padding-bottom: 10px;
 }
 
-/* Timer */
+/* Timer (dimensions given in javascript) */
 
 #timer {
 	position: absolute;
 	z-index: 100;
 	left: 0;
 	top: 0;
-	min-height: 100%;
-	width: 100%;
 	background-color: white;
 	cursor: pointer;
-	line-height: 100%;
 	text-align: center;
-	vertical-align: middle;
 }
 
 .timeout {

@@ -193,7 +193,7 @@ new Vue({
 				};
 			},
 			template: `
-				<div id="timer" :style="{lineHeight: textHeight + 'px', fontSize: 0.66*textHeight + 'px'}">
+				<div id="timer" :style="{lineHeight: divHeight + 'px', fontSize: 0.66*divHeight + 'px', width: divWidth + 'px', height: divHeight + 'px'}">
 					<div @click.left="pauseResume()" @click.right.prevent="reset()" :class="{timeout:time==0}">
 						{{ formattedTime }}
 					</div>
@@ -206,8 +206,11 @@ new Vue({
 					let minutes = Math.floor(this.time / 60);
 					return this.padToZero(minutes) + ":" + this.padToZero(seconds);
 				},
-				textHeight: function() {
+				divHeight: function() {
 					return screen.height;
+				},
+				divWidth: function() {
+					return screen.width;
 				},
 			},
 			methods: {
