@@ -412,6 +412,7 @@ new Vue({
 				});
 			this.addToto(players);
 			this.players = players;
+			this.commitScores(); //save players in memory
 		},
 	},
 });
