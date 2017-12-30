@@ -408,7 +408,11 @@ new Vue({
 				.filter( line => { return line.length > 0; }) //remove empty lines
 				.map( line => {
 					let parts = line.split(",");
-					return {prenom: parts[0], nom: parts[1], pdt: 0, session:0, available: 1};
+					let p = { prenom: parts[0], nom: parts[1] };
+					p.pdt = parts.length > 2 ? parseFloat(parts[2]) : 0;
+					p.session = parts.length > 3 ? parseInt(parts[3]) : 0;
+					p.available = parts.length > 4 ? parts[4] : 1;
+					return p;
 				});
 			this.addToto(players);
 			this.players = players;
