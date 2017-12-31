@@ -122,6 +122,8 @@ new Vue({
 				</div>
 			`,
 			methods: {
+				// TODO: clic sur "Valider" télécharge la ronde courante
+				// TODO: mémoriser les appariements passés pour éviter que les mêmes joueurs se rencontrent plusieurs fois
 				doPairings: function() {
 					// Simple case first: 4 by 4
 					let tables = [];
@@ -233,6 +235,7 @@ new Vue({
 				return {
 					time: 0, //remaining time, in seconds
 					running: false,
+					initialTime: 5400, //1h30
 				};
 			},
 			template: `
@@ -269,7 +272,7 @@ new Vue({
 				},
 				reset: function(e) {
 					this.running = false;
-					this.time = 5400; //1:30
+					this.time = this.initialTime;
 				},
 				start: function() {
 					if (!this.running)
@@ -280,6 +283,8 @@ new Vue({
 						this.running = false;
 						return;
 					}
+					if (this.time == this.initialTime)
+						new Audio("sounds/gong.mp3").play(); //gong at the beginning
 					setTimeout(() => {
 						if (this.running)
 							this.time--;
