@@ -76,10 +76,10 @@ new Vue({
 				<div id="pairings">
 					<div v-show="currentIndex < 0">
 						<div class="button-container-horizontal">
-							<button class="btn validate" :class="{hide: tables.length==0}" @click="commitScores()" title="Valide l'état actuel des scores (cf. rubrique Classement) en mémoire. Cette action est nécessaire au moins une fois en fin de tournoi après toutes les parties, et est recommandée après chaque ronde">
+							<button class="btn cancel" :class="{hide: tables.length==0}" @click="cancelRound()" title="Annule la ronde courante : tous les scores en cours seront perdus, et un nouveau tirage effectué. ATTENTION : action irréversible">
 								Valider
 							</button>
-							<button id="doPairings" class="btn" :class="{cancel: tables.length>0}" @click="doPairings()" title="Répartit les joueurs actifs aléatoirement sur les tables">
+							<button id="doPairings" class="btn" :class="{cancel: tables.length>0}" :disabled="scored.some( s => { return !s; })" @click="doPairings()" title="Répartit les joueurs actifs aléatoirement sur les tables">
 								Nouvelle ronde
 							</button>
 						</div>
@@ -110,10 +110,10 @@ new Vue({
 							</tr>
 						</table>
 						<div class="button-container-horizontal">
-							<button :class="{hide:scored[currentIndex]}" class="btn validate" @click="setScore()" title="Enregistre le score dans la base (la rubrique Classement est mise à jour)">
+							<button :class="{hide:scored[currentIndex]}" class="btn validate" @click="setScore()" title="Enregistre le score dans la base">
 								Enregistrer
 							</button>
-							<button :class="{hide:!scored[currentIndex]}" class="btn cancel" @click="resetScore()" title="Annule le score précédemment enregistré : l'action est visible dans la rubrique Classement">
+							<button :class="{hide:!scored[currentIndex]}" class="btn cancel" @click="resetScore()" title="Annule le score précédemment enregistré">
 								Annuler
 							</button>
 							<button class="btn" @click="closeScoreForm()">Fermer</button>
@@ -124,6 +124,12 @@ new Vue({
 			methods: {
 				// TODO: clic sur "Valider" télécharge la ronde courante
 				// TODO: mémoriser les appariements passés pour éviter que les mêmes joueurs se rencontrent plusieurs fois
+				// --> dans la base: tableau rounds, rounds[0] : {tables[0,1,...], chacune contenant 4 indices de joueurs; + sessions[0,1,...]}
+				// --> devrait séparer les components en plusieurs fichiers...
+				// cas à 5 joueurs : le joueur exempt doit tourner (c'est fait automatiquement en fait)
+				cancelRound: function() {
+					
+				},
 				doPairings: function() {
 					// Simple case first: 4 by 4
 					let tables = [];
@@ -235,14 +241,17 @@ new Vue({
 				return {
 					time: 0, //remaining time, in seconds
 					running: false,
-					initialTime: 5400, //1h30
+					initialTime: 90, //1h30, in minutes
+					setter: false,
+					setterTime: 0, //to input new initial time
 				};
 			},
 			template: `
 				<div id="timer" :style="{lineHeight: divHeight + 'px', fontSize: 0.66*divHeight + 'px', width: divWidth + 'px', height: divHeight + 'px'}">
-					<div @click.left="pauseResume()" @click.right.prevent="reset()" :class="{timeout:time==0}">
+					<div v-show="!setter" @click.left="pauseResume()" @click.right.prevent="reset()" :class="{timeout:time==0}">
 						{{ formattedTime }}
 					</div>
+					<input type="text" autofocus id="setter" @keyup.enter="setTime()" @keyup.esc="setter=false" v-show="setter" v-model="setterTime"></input>
 					<img class="close-cross" src="img/cross.svg" @click="$emit('clockover')"/>
 				</div>
 			`,
@@ -260,6 +269,11 @@ new Vue({
 				},
 			},
 			methods: {
+				setTime: function() {
+					this.initialTime = this.setterTime;
+					this.setter = false;
+					this.reset();
+				},
 				padToZero: function(a) {
 					if (a < 10)
 						return "0" + a;
@@ -272,7 +286,7 @@ new Vue({
 				},
 				reset: function(e) {
 					this.running = false;
-					this.time = this.initialTime;
+					this.time = this.initialTime * 60;
 				},
 				start: function() {
 					if (!this.running)
@@ -293,7 +307,26 @@ new Vue({
 				},
 			},
 			created: function() {
+				this.setterTime = this.initialTime;
 				this.reset();
+			},
+			mounted: function() {
+				let timer = document.getElementById("timer");
+				let keyDict = {
+					32: () => { this.setter = true; }, //Space
+					27: () => { this.setter = false; }, //Esc
+				};
+				document.addEventListener("keyup", e => {
+					if (timer.style.display !== "none")
+					{
+						let func = keyDict[e.keyCode];
+						if (!!func)
+						{
+							e.preventDefault();
+							func();
+						}
+					}
+				});
 			},
 		},
 		'my-ranking': {
