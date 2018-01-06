@@ -122,15 +122,95 @@ new Vue({
 				</div>
 			`,
 			methods: {
-				// TODO: clic sur "Valider" télécharge la ronde courante
+				// TODO: télécharger la ronde courante
 				// TODO: mémoriser les appariements passés pour éviter que les mêmes joueurs se rencontrent plusieurs fois
 				// --> dans la base: tableau rounds, rounds[0] : {tables[0,1,...], chacune contenant 4 indices de joueurs; + sessions[0,1,...]}
 				// --> devrait séparer les components en plusieurs fichiers...
 				// cas à 5 joueurs : le joueur exempt doit tourner (c'est fait automatiquement en fait)
 				cancelRound: function() {
-					
+					this.scored.forEach( (s,i) => {
+						if (s)
+						{
+							// Cancel this table
+							this.currentIndex = i; //TODO: clumsy. funcions should take "index" as argument
+							this.resetScore();
+						}
+					});
+					this.currentIndex = -1;
+					this.doPairings();
 				},
 				doPairings: function() {
+					let rounds = JSON.parse(localStorage.getItem("rounds"));
+
+					if (this.scored.some( s => { return s; }))
+					{
+						this.commitScores(); //TODO: temporary: shouldn't be here... (incremental commit)
+						if (rounds === null)
+							rounds = [];
+						rounds.push(this.tables);
+					}
+
+					// 1) Compute the "meeting" matrix: who played who and how many times
+					let meetMat = _.range(this.players.length).map( i => {
+						_.range(this.players.length).map( j => {
+							return 0;
+						});
+					});
+					rounds.forEach( r => { //for each round
+						r.forEach( t => { //for each table within round
+							for (let i=0; i<4; i++) //TODO: these loops are ugly
+							{
+								for (let j=0; j<4; j++)
+								{
+									if (j!=i)
+										meetMat[i][j]++;
+								}
+							}
+						});
+					});
+
+					// 2) Pre-compute tables repartition (in numbers): depends on active players count % 4
+					let activePlayers = this.players
+						.map( (p,i) => { return Object.Assign({}, p, {index:i}); })
+						.filter( p => { return p.available; });
+					let repartition = _.times(Math.floor(activePlayers.length/4), _.constant(4));
+					switch (activePlayers.length % 4)
+					{
+						case 1:
+							// Need 2 more
+							if (repartition.length-1 >= 2)
+							{
+								repartition[0]--;
+								repartition[1]--;
+								repartition[repartition.length-1] += 2;
+							}
+							break;
+						case 2:
+							// Need 1 more
+							if (repartition.length-1 >= 1)
+							{
+								repartition[0]--;
+								repartition[repartition.length-1]++;
+							}
+							break;
+					}
+
+					// 3) Sort people by total games played (increasing) - naturally solve the potential unpaired case
+					let totalGames = _.range(this.players.length).map( i => { return 0; });
+					rounds.forEach( r => {
+						r.forEach(t => {
+							t.forEach( p => {
+								totalGames[p]++;
+							})
+						})
+					});
+					let sortedPlayers = activePlayers
+						.map( (p,i) => { return Object.Assign({}, p, {games:totalGames[p.index]}); })
+						.sort( (a,b) => { return a.games - b.games; });
+
+					// 4) Affect people on tables, following total games sorted order (with random sampling on ex-aequos)
+					// --> et surtout en minimisant la somme des rencontres précédentes (ci-dessus : cas particulier rare à peu de joueurs)
+//TODO
 					// Simple case first: 4 by 4
 					let tables = [];
 					let currentTable = [];
