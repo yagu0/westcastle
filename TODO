@@ -2,3 +2,29 @@ Use CSS framework for more robust styles, adapted to screen size.
 (Currently OK for screens between 1250 and 2000 pixels wide).
 
 matoso : name OK... matoso2 éventuellement (si auteur OK)
+
+Roadmap :
+ 0) Enrichir Participants : nom/prenom/EMA/nationalité (import/export CSV) [clé = numéro EMA]
+    --> possibilité d'ajouter nouveau joueur une fois tournoi démarré (bouton), mais pas reset CSV.
+		Toujours possibilité de marquer des joueurs absents : abandons, ou simple absence ;
+		  mais ils doivent apparaître dans la même colonne en bas.
+ 0bis) Table "classement" : export CSV, clic sur joueur affiche ses stats (modal?)
+ 1) Front-end liste des tournois (avec x "supprimer") + bouton "nouveau tournoi"
+    Bouton "import/export" tournament, qui télécharge/upload le JSON stringifié
+		Choix des règles ?! MCR ?
+		Possibilité nombre rondes fixé (alors on génère tout, impression possible ...etc --> 4 par feuille A4),
+		ou indéterminée : clic sur "nouvelle ronde" après chaque ronde ;
+		Nom du tournoi = titre ensuite [matoso2.html]
+Puis : tournament.html#nom_tournoi
+Sauvegarde en temps réel sous forme players / rounds --> use Dexie http://dexie.org/docs/Tutorial/Getting-started
+(( 2) localStorage[nomTournoi] --> JSON.stringify(tournament), contenant players + rounds )) --> Mieux : Dexie
+ 3) Ronde par onglets, mais composition ronde n+1 déterminée à la fin de la ronde n.
+ 4) Une ronde peut être annulée (bouton en haut) ; aussi un bouton "fin de tournoi"
+ 5) Bouton "Finale" --> 4 premiers puis 5 à 8 ...etc
+ 6) Raffiner le classement en ajoutant "écarts", "donnée", "tiré" ...etc
+(( Rubrique tirage ?! Bof... ))
+ 7) Rubrique "Parcours" comme MaToSo (tout OK là-dedans, affichage avec connaissances en cours)
+    --> boites de dimensions précises, position absolute, [21x29.7] / 2
+ 9) Drapeaux pays...
+
+En attendant, améliorer algo appariements dans version actuelle et chrono amélioré.
