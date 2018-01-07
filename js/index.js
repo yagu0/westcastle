@@ -77,9 +77,9 @@ new Vue({
 					<div v-show="currentIndex < 0">
 						<div class="button-container-horizontal">
 							<button class="btn cancel" :class="{hide: tables.length==0}" @click="cancelRound()" title="Annule la ronde courante : tous les scores en cours seront perdus, et un nouveau tirage effectué. ATTENTION : action irréversible">
-								Valider
+								Annuler
 							</button>
-							<button id="doPairings" class="btn" :class="{cancel: tables.length>0}" :disabled="scored.some( s => { return !s; })" @click="doPairings()" title="Répartit les joueurs actifs aléatoirement sur les tables">
+							<button id="doPairings" class="btn" :disabled="scored.some( s => { return !s; })" @click="doPairings()" title="Répartit les joueurs actifs aléatoirement sur les tables">
 								Nouvelle ronde
 							</button>
 						</div>
@@ -113,7 +113,7 @@ new Vue({
 							<button :class="{hide:scored[currentIndex]}" class="btn validate" @click="setScore()" title="Enregistre le score dans la base">
 								Enregistrer
 							</button>
-							<button :class="{hide:!scored[currentIndex]}" class="btn cancel" @click="resetScore()" title="Annule le score précédemment enregistré">
+							<button :class="{hide:!scored[currentIndex]}" class="btn cancel" @click="cancelScore()" title="Annule le score précédemment enregistré">
 								Annuler
 							</button>
 							<button class="btn" @click="closeScoreForm()">Fermer</button>
@@ -122,66 +122,46 @@ new Vue({
 				</div>
 			`,
 			methods: {
-				// TODO: télécharger la ronde courante
-				// TODO: mémoriser les appariements passés pour éviter que les mêmes joueurs se rencontrent plusieurs fois
-				// --> dans la base: tableau rounds, rounds[0] : {tables[0,1,...], chacune contenant 4 indices de joueurs; + sessions[0,1,...]}
-				// --> devrait séparer les components en plusieurs fichiers...
-				// cas à 5 joueurs : le joueur exempt doit tourner (c'est fait automatiquement en fait)
+				// TODO: télécharger la ronde courante (faudrait aussi mémoriser les points...)
+				// --> je devrais séparer les components en plusieurs fichiers maintenant
 				cancelRound: function() {
 					this.scored.forEach( (s,i) => {
 						if (s)
 						{
 							// Cancel this table
-							this.currentIndex = i; //TODO: clumsy. funcions should take "index" as argument
-							this.resetScore();
+							this.currentIndex = i; //TODO: clumsy. functions should take "index" as argument
+							this.cancelScore();
 						}
 					});
 					this.currentIndex = -1;
 					this.doPairings();
 				},
 				doPairings: function() {
-					let rounds = JSON.parse(localStorage.getItem("rounds"));
-
+					let rounds = JSON.parse(localStorage.getItem("rounds")) || [];
 					if (this.scored.some( s => { return s; }))
 					{
 						this.commitScores(); //TODO: temporary: shouldn't be here... (incremental commit)
-						if (rounds === null)
-							rounds = [];
 						rounds.push(this.tables);
+						localStorage.setItem("rounds", JSON.stringify(rounds));
 					}
-
-					// 1) Compute the "meeting" matrix: who played who and how many times
-					let meetMat = _.range(this.players.length).map( i => {
-						_.range(this.players.length).map( j => {
-							return 0;
-						});
-					});
-					rounds.forEach( r => { //for each round
-						r.forEach( t => { //for each table within round
-							for (let i=0; i<4; i++) //TODO: these loops are ugly
-							{
-								for (let j=0; j<4; j++)
-								{
-									if (j!=i)
-										meetMat[i][j]++;
-								}
-							}
-						});
-					});
-
-					// 2) Pre-compute tables repartition (in numbers): depends on active players count % 4
+					this.currentIndex = -1; //required if reset while scoring
+					let tables = [];
+					// 1) Pre-compute tables repartition (in numbers): depends on active players count % 4
 					let activePlayers = this.players
-						.map( (p,i) => { return Object.Assign({}, p, {index:i}); })
+						.map( (p,i) => { return Object.assign({}, p, {index:i}); })
 						.filter( p => { return p.available; });
 					let repartition = _.times(Math.floor(activePlayers.length/4), _.constant(4));
-					switch (activePlayers.length % 4)
+					let remainder = activePlayers.length % 4;
+					if (remainder > 0)
+						repartition.push(remainder);
+					switch (remainder)
 					{
 						case 1:
 							// Need 2 more
 							if (repartition.length-1 >= 2)
 							{
-								repartition[0]--;
-								repartition[1]--;
+								repartition[repartition.length-3] --  ;
+								repartition[repartition.length-2] --  ;
 								repartition[repartition.length-1] += 2;
 							}
 							break;
@@ -189,73 +169,95 @@ new Vue({
 							// Need 1 more
 							if (repartition.length-1 >= 1)
 							{
-								repartition[0]--;
-								repartition[repartition.length-1]++;
+								repartition[repartition.length-2] --  ;
+								repartition[repartition.length-1] ++  ;
 							}
 							break;
 					}
-
-					// 3) Sort people by total games played (increasing) - naturally solve the potential unpaired case
-					let totalGames = _.range(this.players.length).map( i => { return 0; });
-					rounds.forEach( r => {
-						r.forEach(t => {
-							t.forEach( p => {
-								totalGames[p]++;
-							})
-						})
-					});
-					let sortedPlayers = activePlayers
-						.map( (p,i) => { return Object.Assign({}, p, {games:totalGames[p.index]}); })
-						.sort( (a,b) => { return a.games - b.games; });
-
-					// 4) Affect people on tables, following total games sorted order (with random sampling on ex-aequos)
-					// --> et surtout en minimisant la somme des rencontres précédentes (ci-dessus : cas particulier rare à peu de joueurs)
-//TODO
-					// Simple case first: 4 by 4
-					let tables = [];
-					let currentTable = [];
-					let ordering = _.shuffle(_.range(this.players.length));
-					for (let i=0; i<ordering.length; i++)
+					// 2) Shortcut for round 1: just spread at random
+					if (rounds.length == 0)
 					{
-						if ( ! this.players[ordering[i]].available )
-							continue;
-						if (currentTable.length >= 4)
-						{
-							tables.push(currentTable);
-							currentTable = [];
-						}
-						currentTable.push(ordering[i]);
-					}
-					// Analyse remainder
-					this.unpaired = [];
-					if (currentTable.length != 0)
-					{
-						if (currentTable.length < 3)
-						{
-							let missingPlayers = 3 - currentTable.length;
-							// Pick players from 'missingPlayers' random different tables, if possible
-							if (tables.length >= missingPlayers)
+						let currentTable = [];
+						let ordering = _.shuffle(_.range(activePlayers.length));
+						let tableIndex = 0;
+						ordering.forEach( i => {
+							currentTable.push(activePlayers[i].index);
+							if (currentTable.length == repartition[tableIndex])
 							{
-								let tblNums = _.sample(_.range(tables.length), missingPlayers);
-								tblNums.forEach( num => {
-									currentTable.push(tables[num].pop());
-								});
+								if (currentTable.length == 3)
+									currentTable.push(0); //add Toto
+								// flush
+								tables.push(currentTable);
+								currentTable = [];
+								tableIndex++;
 							}
-						}
-						if (currentTable.length >= 3)
-							tables.push(currentTable);
-						else
-							this.unpaired = currentTable;
+						});
 					}
-					// Ensure that all tables have 4 players
-					tables.forEach( t => {
-						if (t.length < 4)
-							t.push(0); //index of "Toto", ghost player
-					});
+					else
+					{
+						// General case after round 1:
+						// NOTE: alternative method, deterministic: player 1 never move, player 2 moves by 1, ...and so on
+						// --> but this leads to inferior pairings (e.g. 2 tables 8 players)
+						// -----
+						// 2bis) Compute the "meeting" matrix: who played who and how many times
+						let meetMat = _.range(this.players.length).map( i => {
+							return _.times(this.players.length, _.constant(0));
+						});
+						rounds.forEach( r => { //for each round
+							r.forEach( t => { //for each table within round
+								for (let i=0; i<4; i++) //TODO: these loops are ugly
+								{
+									for (let j=i+1; j<4; j++)
+										meetMat[t[i]][t[j]]++;
+								}
+							});
+						});
+						// 3) Fill tables by minimizing row sums of meetMat
+						const playersCount = activePlayers.length;
+						repartition.forEach( r => {
+							// Pick first player at random among active players, unless there is one unpaired guy
+							let firstPlayer = this.unpaired[0]; //can be undefined
+							if (!firstPlayer || activePlayers.length < playersCount)
+							{
+								let randIndex = _.sample( _.range(activePlayers.length) );
+								firstPlayer = activePlayers[randIndex].index;
+								activePlayers.splice(randIndex, 1);
+							}
+							else
+								activePlayers.splice( activePlayers.findIndex( item => { return item.index == firstPlayer; }), 1 );
+							let table = [ firstPlayer ];
+							for (let i=1; i<r; i++)
+							{
+								// Minimize row sums of meetMat for remaining players
+								let counts = [];
+								activePlayers.forEach( u => {
+									let count = 0;
+									let candidate = u.index;
+									table.forEach( p => {
+										count += meetMat[p][candidate];
+										count += meetMat[candidate][p];
+									});
+									counts.push( {index:u.index, count:count } );
+								});
+								counts.sort( (a,b) => { return a.count - b.count; });
+								table.push(counts[0].index);
+								activePlayers.splice( activePlayers.findIndex( item => { return item.index == counts[0].index; }), 1 );
+							}
+							if (table.length == 3)
+								table.push(0); //add Todo
+							tables.push(table);
+						});
+					}
+					if (tables.length >= 1 && tables[tables.length-1].length < 3)
+						this.unpaired = tables.pop();
+					else
+						this.unpaired = [];
 					this.tables = tables;
-					this.sessions = tables.map( t => { return []; }); //empty sessions
-					this.scored = tables.map( t => { return false; }); //nothing scored yet
-					this.currentIndex = -1; //required if reset while scoring
+					this.resetScores();
+				},
+				resetScores: function() {
+					this.sessions = this.tables.map( t => { return []; }); //empty sessions
+					this.scored = this.tables.map( t => { return false; }); //nothing scored yet
 				},
 				showScoreForm: function(table,index) {
 					if (this.sessions[index].length == 0)
@@ -305,7 +307,7 @@ new Vue({
 					Vue.set(this.scored, this.currentIndex, true);
 					this.currentIndex = -1;
 				},
-				resetScore: function() {
+				cancelScore: function() {
 					let pdts = this.getPdts();
 					for (let i=0; i<4; i++)
 					{
@@ -377,7 +379,7 @@ new Vue({
 						this.running = false;
 						return;
 					}
-					if (this.time == this.initialTime)
+					if (this.time == this.initialTime * 60)
 						new Audio("sounds/gong.mp3").play(); //gong at the beginning
 					setTimeout(() => {
 						if (this.running)

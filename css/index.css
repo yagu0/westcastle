@@ -65,7 +65,6 @@ img.logo {
 }
 
 .btn {
-  background-color: #3498db;
   background-image: linear-gradient(to bottom, #3498db, #2980b9);
   box-shadow: 0px 2px 3px #666666;
   font-family: Arial;
@@ -77,7 +76,6 @@ img.logo {
 }
 
 .btn:hover {
-  background-color: #3cb0fd;
   background-image: linear-gradient(to bottom, #3cb0fd, #3498db);
   text-decoration: none;
 }
@@ -126,6 +124,11 @@ button.cancel {
 }
 button.cancel:hover {
 	background-image: linear-gradient(to bottom, #fc433c, #d93434);
+}
+
+button:disabled, button:disabled:hover {
+	background-image: linear-gradient(to bottom, #aaa, #777);
+	cursor: default;
 }
 
 /* players div */

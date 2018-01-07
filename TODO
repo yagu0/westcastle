@@ -26,5 +26,3 @@ Sauvegarde en temps réel sous forme players / rounds --> use Dexie http://dexie
  7) Rubrique "Parcours" comme MaToSo (tout OK là-dedans, affichage avec connaissances en cours)
     --> boites de dimensions précises, position absolute, [21x29.7] / 2
  9) Drapeaux pays...
-
-En attendant, améliorer algo appariements dans version actuelle et chrono amélioré.

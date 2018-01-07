@@ -13,7 +13,7 @@ html
 			li Bouton "(Ré)initialiser" : charger la liste des joueurs, puis cliquer sur les absents
 			li Aller dans la section "appariements" et cliquer sur le bouton "Nouvelle ronde"
 			li Lancer le chrono (section "Chronomètre", puis clic gauche [puis F11])
-			li Après la ronde, cliquer sur chaque table pour indiquer les (mini-)points, #[br] #[strong puis cliquer sur "Valider".]
+			li Après la ronde, cliquer sur chaque table pour indiquer les (mini-)points, #[br] #[strong puis cliquer sur "Nouvelle ronde".]
 		p Le classement est mis à jour dans la rubrique correspondante.
 
 		p Voir aussi la #[a(href="https://auder.net/westcastle_demo.webm") vidéo de démonstration]
@@ -54,6 +54,11 @@ html
 		p.
 			En cas d'erreur, re-cliquer sur la table à corriger : cliquer ensuite sur "Annuler", puis ré-entrer les scores.
 
+		p.
+			Même s'il n'y a plus aucune ronde, ne pas oublier de #[strong cliquer sur "Nouvelle ronde"] :
+			cela mémorise les appariements actuels, et surtout enregistre les derniers scores en mémoire.
+			le bouton "Annuler", quant à lui, efface les scores déjà entrés et relance la ronde (nouvel appariement).
+
 		h2 Chronomètre
 
 		p.small-spacing.
@@ -61,8 +66,9 @@ html
 			(la touche peut varier suivant le navigateur...). Ensuite :
 
 		ul
-			li un clic gauche lance le chrono ou le met en pause. Un gong retentit une fois le temps écoulé.
-			li un clic droit réinitialise le chrono (à 1h30 = 90 minutes)
+			li un clic gauche lance le chrono ou le met en pause. Un gong retentit au début et une fois le temps écoulé.
+			li Un appui sur la barre d'espace permet d'éditer le temps initial (en minutes).
+			li un clic droit réinitialise le chrono (90 minutes = 1h30 par défaut).
 			li un clic sur la croix en haut à droite revient à la section appariements (suite logique).
 
 		p.
